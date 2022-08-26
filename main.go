@@ -8,6 +8,7 @@ import (
 	"backupAgent/handler"
 	"backupAgent/proto/backupAgent/bak"
 	"backupAgent/proto/backupAgent/bakhistory"
+	"backupAgent/proto/backupAgent/esbak"
 	"backupAgent/proto/backupAgent/host"
 	"backupAgent/proto/backupAgent/task"
 	"github.com/micro/go-micro/v2"
@@ -60,6 +61,7 @@ func main() {
 		_ = task.RegisterTaskHandler(microService.Server(), new(handler.TaskHandler))
 		_ = bakhistory.RegisterHistoryHandler(microService.Server(), new(handler.HistoryHandler))
 		_ = bak.RegisterBakServiceHandler(microService.Server(), new(handler.BakHandler))
+		_ = esbak.RegisterEsServiceHandler(microService.Server(), new(handler.EsTaskHandler))
 		// Run microService
 		if err := microService.Run(); err != nil {
 			log.Fatal(err)

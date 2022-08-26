@@ -45,8 +45,8 @@ func (e *EsTaskHandler) GetTaskList(ctx context.Context, in *esbak.EsTaskListInp
 	if err != nil {
 		return err
 	}
-	data.EsTaskListOutPutItem = out.EsTaskListOutPutItem
-	data.Total = out.Total
+	out.EsTaskListOutPutItem = data.EsTaskListOutPutItem
+	out.Total = data.Total
 	return nil
 }
 func (e *EsTaskHandler) GetTaskDetail(ctx context.Context, in *esbak.EsTaskIDInput, out *esbak.EsTaskDetailOutPut) error {
@@ -54,6 +54,6 @@ func (e *EsTaskHandler) GetTaskDetail(ctx context.Context, in *esbak.EsTaskIDInp
 	if err != nil {
 		return err
 	}
-	data.EsTaskInfo = out.EsTaskInfo
+	out.EsTaskInfo = data.GetEsTaskInfo()
 	return nil
 }

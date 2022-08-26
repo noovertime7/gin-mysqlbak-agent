@@ -34,6 +34,8 @@ func CorlorHandler(msg string) string {
 		return "\033[1;32m" + msg + "\033[0m"
 	case "WARN":
 		return "\033[1;33m" + msg + "\033[0m"
+	case "WARNING":
+		return "\033[1;33m" + msg + "\033[0m"
 	case "ERROR":
 		return "\033[1;31m" + msg + "\033[0m"
 	case "FATAL":

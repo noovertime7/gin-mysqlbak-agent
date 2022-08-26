@@ -6,6 +6,7 @@ import (
 	"backupAgent/domain/pkg/database"
 	"backupAgent/proto/backupAgent/esbak"
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -89,6 +90,7 @@ func (e *ESTaskService) GetTaskDetail(ctx context.Context, id int64) (*esbak.EsT
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(detail.ESTaskInfo)
 	out := &esbak.EsTaskDetailOutPut{EsTaskInfo: &esbak.EsTaskInfo{
 		EsHost:      detail.ESTaskInfo.Host,
 		EsUser:      detail.ESTaskInfo.Username,
@@ -98,5 +100,6 @@ func (e *ESTaskService) GetTaskDetail(ctx context.Context, id int64) (*esbak.EsT
 		KeepNumber:  detail.ESTaskInfo.KeepNumber,
 		IsEsBakAll:  detail.ESTaskInfo.IsAllIndexBak,
 	}}
+	fmt.Println("out = ", out)
 	return out, nil
 }
