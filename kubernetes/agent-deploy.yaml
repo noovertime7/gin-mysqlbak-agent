@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gin-mysqlbak-agent
+  namespace: mysqlbak
+spec:
+  selector:
+    matchLabels:
+      app: gin-mysqlbak-agent
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gin-mysqlbak-agent
+    spec:
+      containers:
+      - name: gin-mysqlbak-agent
+        imagePullPolicy: IfNotPresent
+        image: harbor-tj.ts-it.cn:63333/mysqlbak/gin-mysqlbak-agent:2.0.2
+        volumeMounts:
+        - name: baseconf
+          mountPath: /app/domain/config/config.ini
+          subPath: config.ini
+      volumes:
+      - name: baseconf
+        configMap:
+          name: mysqlbak-agent-conf

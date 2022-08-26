@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysqlbak-agent-conf
+  namespace: mysqlbak
+data:
+  config.ini: |
+    [base]
+    serviceName = 公司测试环境
+    version = 1.0
+    addr = ":39010"           # 监听地址
+    etcdAddr = "172.20.208.41:1813"
+    [mysql]
+    autoInit = true  ## 是否自动初始化sql
+    host = mysql.middleware
+    port = 3306
+    user = root
+    password = Tsit@2022
+    dbname = backup-agent
+    [dingProxyAgent]
+    enable = false
+    addr = 172.20.96.56:39999
+    title = "临沂"
+    content = "临沂环境"
+    [jaeger]
+    enable = false
+    addr = 10.20.110.51:6831

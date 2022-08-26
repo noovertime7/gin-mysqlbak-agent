@@ -1,0 +1,80 @@
+package dao
+
+import (
+	"backupAgent/proto/backupAgent/esbak"
+	"context"
+	"github.com/go-errors/errors"
+	"gorm.io/gorm"
+	"time"
+)
+
+type EsTaskDB struct {
+	ID            int64     `json:"id" gorm:"primary_key" description:"自增主键"`
+	ServiceName   string    `json:"service_name" gorm:"column:service_name" description:"服务名"`
+	Host          string    `json:"host" gorm:"column:host" description:"服务名"`
+	Password      string    `json:"password" gorm:"column:password" description:"es密码" `
+	Username      string    `json:"username" gorm:"column:username" description:"es用户名" `
+	BackupCycle   string    `json:"backup_cycle" gorm:"column:backup_cycle" description:"备份周期"`
+	KeepNumber    int64     `json:"keep_number"  gorm:"column:keep_number" description:"数据保留周期"`
+	Index         string    `json:"index" gorm:"column:index" description:"备份索引"`
+	IsAllIndexBak int64     `json:"is_all_index_bak" gorm:"column:is_all_index_bak" description:"是否全库备份"`
+	IsDelete      int64     `json:"is_deleted" gorm:"column:is_deleted" description:"是否删除"`
+	Status        int64     `json:"status" gorm:"column:status" description:"开关"`
+	UpdatedAt     time.Time `json:"updated_at" gorm:"column:updated_at" description:"更新时间"`
+	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at" description:"添加时间"`
+}
+
+func (e *EsTaskDB) TableName() string {
+	return "es_task"
+}
+
+func (e *EsTaskDB) Save(ctx context.Context, tx *gorm.DB) error {
+	return tx.WithContext(ctx).Save(e).Error
+}
+
+func (e *EsTaskDB) Updates(ctx context.Context, tx *gorm.DB) error {
+	return tx.WithContext(ctx).Table(e.TableName()).Updates(e).Error
+}
+
+func (e *EsTaskDB) UpdateStatus(ctx context.Context, tx *gorm.DB, esTaskDB *EsTaskDB) error {
+	if esTaskDB.ID == 0 {
+		return errors.New("TaskID为空")
+	}
+	return tx.WithContext(ctx).Table(e.TableName()).Where("id = ?", esTaskDB.ID).Updates(map[string]interface{}{
+		"status": esTaskDB.Status,
+	}).Error
+}
+
+func (e *EsTaskDB) Find(ctx context.Context, tx *gorm.DB, search *EsTaskDB) (*EsTaskDB, error) {
+	out := &EsTaskDB{}
+	err := tx.WithContext(ctx).Where(search).Find(out).Error
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (e *EsTaskDB) PageList(ctx context.Context, tx *gorm.DB, params *esbak.EsTaskListInput) ([]*EsTaskDB, int64, error) {
+	var total int64 = 0
+	var list []*EsTaskDB
+	offset := (params.PageNo - 1) * params.PageSize
+	query := tx.WithContext(ctx)
+	query = query.Table(e.TableName()).Where("is_deleted=0")
+	if params.Info != "" {
+		query = query.Where("(host like ? or service_name like ? )", "%"+params.Info+"%", "%"+params.Info+"%")
+	}
+	if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Order("id desc").Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
+		return nil, 0, err
+	}
+	query.Find(&list).Count(&total)
+	return list, total, nil
+}
+
+func (e *EsTaskDB) TaskDetail(ctx context.Context, tx *gorm.DB, search *EsTaskDB) (*EsTaskDetail, error) {
+	esInfo := &EsTaskDB{ID: search.ID}
+	esinfoRes, err := esInfo.Find(ctx, tx, esInfo)
+	if err != nil {
+		return nil, err
+	}
+	return &EsTaskDetail{ESTaskInfo: esinfoRes}, nil
+}
