@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/olivere/elastic"
+	"log"
 	"time"
 )
 
@@ -33,12 +34,9 @@ func main() {
 	var err error
 	client, err := elastic.NewClient(
 		elastic.SetURL(esAddr),
-		elastic.SetBasicAuth("elastic", "Tsit@123"),
+		elastic.SetBasicAuth("elasticbak", "Tsit@123"),
 		elastic.SetHealthcheckInterval(10*time.Second),
 		elastic.SetSniff(false))
-	if err != nil {
-		panic(err)
-	}
 	if err != nil {
 		panic(err)
 	}
@@ -53,36 +51,10 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("es version %s\n", esversionCode)
+	//添加数据
 	//create(client)
-	////创建仓亏
-	//Snapshot := client.SnapshotCreateRepository("backup")
-	//Snapshot.BodyJson("{\n    \"type\": \"fs\", \n    \"settings\": {\n        \"location\": \"/usr/share/elasticsearch/bakfile\" \n    }\n}\n")
-	//res, err := Snapshot.Do(context.Background())
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Println(res)
-	//创建快照
-	//SnapshotService := client.SnapshotCreate("backup", "snapshot_infobak")
-	//snapshotCreateResponse, err := SnapshotService.Do(context.Background())
-	//if err != nil {
-	//	panic(err)
-	//}
-	//if !*snapshotCreateResponse.Accepted {
-	//	fmt.Println("备份失败")
-	//}
-	//fmt.Println(snapshotCreateResponse.Snapshot)
-	//fmt.Println("创建成功")
-	//snapGetservice := client.SnapshotGet("backup")
-	//getResponse, err := snapGetservice.Do(context.Background())
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Println(getResponse.Snapshots)
-	//for _, snap := range getResponse.Snapshots {
-	//	fmt.Println(snap)
-	//}
-	restore(client)
+	IsRepExist(client)
+	//restore(client)
 }
 
 func restore(client *elastic.Client) {
@@ -94,4 +66,54 @@ func restore(client *elastic.Client) {
 	}
 	fmt.Println("restore 成功", restoreResponse.Accepted)
 	//fmt.Println(restoreResponse.Snapshot.Snapshot)
+}
+
+//测试获取rep
+func IsRepExist(client *elastic.Client) bool {
+	response, err := client.SnapshotGetRepository("tesdddddddt").Do(context.Background())
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	fmt.Println(len(response))
+	if len(response) != 0 {
+		return true
+	}
+	return false
+}
+
+func createrep(client *elastic.Client) {
+	Snapshot := client.SnapshotCreateRepository("backup")
+	Snapshot.BodyJson("{\n    \"type\": \"fs\", \n    \"settings\": {\n        \"location\": \"/usr/share/elasticsearch/bakfile\" \n    }\n}\n")
+	res, err := Snapshot.Do(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(res.Acknowledged)
+}
+
+func startbak(client *elastic.Client) {
+	//创建快照
+	SnapshotService := client.SnapshotCreate("backup", "snapshot_infobak")
+	snapshotCreateResponse, err := SnapshotService.Do(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	if !*snapshotCreateResponse.Accepted {
+		fmt.Println("备份失败")
+	}
+	fmt.Println(snapshotCreateResponse.Snapshot)
+	fmt.Println("创建成功")
+}
+
+func getSnapShot(client *elastic.Client) {
+	snapGetservice := client.SnapshotGet("backup")
+	getResponse, err := snapGetservice.Do(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(getResponse.Snapshots)
+	for _, snap := range getResponse.Snapshots {
+		fmt.Println(snap)
+	}
 }

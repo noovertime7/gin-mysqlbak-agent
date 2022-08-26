@@ -24,7 +24,7 @@ type EsHostInfo struct {
 	Password string
 }
 
-func NewEsBaker(info EsHostInfo) (EsBaker, error) {
+func NewEsBaker(info *EsHostInfo) (EsBaker, error) {
 	c, err := elastic.NewClient(
 		elastic.SetURL(info.Host),
 		elastic.SetBasicAuth(info.UserName, info.Password),
