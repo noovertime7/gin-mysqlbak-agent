@@ -26,7 +26,8 @@ func (e *esBakService) Start(ctx context.Context, taskID int64) error {
 	if err := bakHandler.Start(); err != nil {
 		return err
 	}
-	return nil
+	taskInfo.Status = 1
+	return taskInfo.UpdateStatus(ctx, database.Gorm, taskInfo)
 }
 
 func (e *esBakService) Stop(ctx context.Context, taskID int64) error {
@@ -42,5 +43,6 @@ func (e *esBakService) Stop(ctx context.Context, taskID int64) error {
 	if err := bakHandler.Stop(); err != nil {
 		return err
 	}
-	return nil
+	taskInfo.Status = 0
+	return taskInfo.UpdateStatus(ctx, database.Gorm, taskInfo)
 }

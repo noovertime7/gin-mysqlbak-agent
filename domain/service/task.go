@@ -129,7 +129,6 @@ func (t *TaskService) TaskList(ctx context.Context, taskinfo *task.TaskListInput
 	}
 	var outList []*task.TaskListItem
 	for _, listIterm := range list {
-		nexttime, _ := pkg.Cronexpr(listIterm.BackupCycle)
 		hostDB := &dao.HostDatabase{Id: listIterm.HostID}
 		databseres, err := hostDB.Find(ctx, database.Gorm, hostDB)
 		if err != nil {
@@ -140,7 +139,7 @@ func (t *TaskService) TaskList(ctx context.Context, taskinfo *task.TaskListInput
 			Host:        databseres.Host,
 			HostID:      listIterm.HostID,
 			DBName:      listIterm.DBName,
-			BackupCycle: nexttime,
+			BackupCycle: pkg.CornExprToTime(listIterm.BackupCycle),
 			KeepNumber:  listIterm.KeepNumber,
 			CreateAt:    listIterm.CreatedAt.Format("2006年01月02日15:04"),
 		}

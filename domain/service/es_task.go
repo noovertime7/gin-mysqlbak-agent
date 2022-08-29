@@ -30,7 +30,7 @@ func (e *ESTaskService) TaskADD(ctx context.Context, taskInfo *esbak.EsBakTaskAD
 		BackupCycle: taskInfo.BackupCycle,
 		KeepNumber:  taskInfo.KeepNumber,
 		IsDelete:    0,
-		Status:      1,
+		Status:      0,
 		UpdatedAt:   time.Now(),
 		CreatedAt:   time.Now(),
 	}
@@ -38,8 +38,7 @@ func (e *ESTaskService) TaskADD(ctx context.Context, taskInfo *esbak.EsBakTaskAD
 }
 
 func (e *ESTaskService) TaskDelete(ctx context.Context, id int64) error {
-	var esDB *dao.EsTaskDB
-	esDB.ID = id
+	esDB := &dao.EsTaskDB{ID: id}
 	esTaskDB, err := esDB.Find(ctx, database.Gorm, esDB)
 	if err != nil {
 		return err
@@ -76,9 +75,10 @@ func (e *ESTaskService) GetTaskList(ctx context.Context, taskInfo *esbak.EsTaskL
 		outItem := &esbak.EsTaskListOutPutItem{
 			ID:          listIterm.ID,
 			EsHost:      listIterm.Host,
-			BackupCycle: listIterm.BackupCycle,
+			BackupCycle: pkg.CornExprToTime(listIterm.BackupCycle),
 			KeepNumber:  listIterm.KeepNumber,
 			Status:      pkg.IntToBool(listIterm.Status),
+			CreateAt:    listIterm.CreatedAt.Format("2006年01月02日15:04:01"),
 		}
 		outList = append(outList, outItem)
 	}
@@ -99,9 +99,10 @@ func (e *ESTaskService) GetTaskDetail(ctx context.Context, id int64) (*esbak.EsT
 		EsHost:      detail.ESTaskInfo.Host,
 		EsUser:      detail.ESTaskInfo.Username,
 		EsPassword:  detail.ESTaskInfo.Password,
-		BackupCycle: detail.ESTaskInfo.BackupCycle,
+		BackupCycle: pkg.CornExprToTime(detail.ESTaskInfo.BackupCycle),
 		KeepNumber:  detail.ESTaskInfo.KeepNumber,
 		Status:      pkg.IntToBool(detail.ESTaskInfo.Status),
+		CreateAt:    detail.ESTaskInfo.CreatedAt.Format("2006年01月02日15:04:01"),
 	}}
 	return out, nil
 }

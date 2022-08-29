@@ -7,13 +7,14 @@ import (
 	"time"
 )
 
-func Cronexpr(exprstr string) (string, error) {
+func CornExprToTime(exprstr string) string {
 	expr, err := cronexpr.Parse(exprstr) // 如果表达式解析错误将返回一个错误
 	if err != nil {
-		return "unknown", err
+		log.Logger.Error("cron表达式转换失败", err)
+		return "unknown"
 	}
 	nextTime := expr.Next(time.Now())
-	return nextTime.Format("2006年01月02日15:04:01"), nil
+	return nextTime.Format("2006年01月02日15:04:01")
 }
 
 func IntToBool(a int64) bool {
