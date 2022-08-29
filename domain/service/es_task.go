@@ -99,7 +99,7 @@ func (e *ESTaskService) GetTaskDetail(ctx context.Context, id int64) (*esbak.EsT
 		EsHost:      detail.ESTaskInfo.Host,
 		EsUser:      detail.ESTaskInfo.Username,
 		EsPassword:  detail.ESTaskInfo.Password,
-		BackupCycle: pkg.CornExprToTime(detail.ESTaskInfo.BackupCycle),
+		BackupCycle: detail.ESTaskInfo.BackupCycle,
 		KeepNumber:  detail.ESTaskInfo.KeepNumber,
 		Status:      pkg.IntToBool(detail.ESTaskInfo.Status),
 		CreateAt:    detail.ESTaskInfo.CreatedAt.Format("2006年01月02日15:04:01"),
