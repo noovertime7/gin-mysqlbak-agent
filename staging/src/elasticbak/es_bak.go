@@ -11,11 +11,17 @@ import (
 )
 
 type EsBaker interface {
+	EsBakerInfo
 	createRepository(ctx context.Context) error
 	GetRepository(ctx context.Context) (elastic.SnapshotGetRepositoryResponse, error)
 	CreateSnapshot(ctx context.Context, snap string) error
 	GetSnapshot(ctx context.Context) (*elastic.SnapshotGetResponse, error)
 	DeleteSnapshot(ctx context.Context, snap string) error
+}
+
+type EsBakerInfo interface {
+	GetRepositoryDir() string
+	GetRepositoryName() string
 }
 
 type EsHostInfo struct {
@@ -49,6 +55,14 @@ type esBak struct {
 	Client         *elastic.Client
 	RepositoryName string
 	RepositoryDir  string
+}
+
+func (e *esBak) GetRepositoryName() string {
+	return e.RepositoryName
+}
+
+func (e *esBak) GetRepositoryDir() string {
+	return e.RepositoryDir
 }
 
 func (e *esBak) createRepository(ctx context.Context) error {

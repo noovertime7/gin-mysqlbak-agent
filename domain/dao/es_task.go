@@ -9,19 +9,17 @@ import (
 )
 
 type EsTaskDB struct {
-	ID            int64     `json:"id" gorm:"primary_key" description:"自增主键"`
-	ServiceName   string    `json:"service_name" gorm:"column:service_name" description:"服务名"`
-	Host          string    `json:"host" gorm:"column:host" description:"服务名"`
-	Password      string    `json:"password" gorm:"column:password" description:"es密码" `
-	Username      string    `json:"username" gorm:"column:username" description:"es用户名" `
-	BackupCycle   string    `json:"backup_cycle" gorm:"column:backup_cycle" description:"备份周期"`
-	KeepNumber    int64     `json:"keep_number"  gorm:"column:keep_number" description:"数据保留周期"`
-	Index         string    `json:"index" gorm:"column:index" description:"备份索引"`
-	IsAllIndexBak int64     `json:"is_all_index_bak" gorm:"column:is_all_index_bak" description:"是否全库备份"`
-	IsDelete      int64     `json:"is_deleted" gorm:"column:is_deleted" description:"是否删除"`
-	Status        int64     `json:"status" gorm:"column:status" description:"开关"`
-	UpdatedAt     time.Time `json:"updated_at" gorm:"column:updated_at" description:"更新时间"`
-	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at" description:"添加时间"`
+	ID          int64     `json:"id" gorm:"primary_key" description:"自增主键"`
+	ServiceName string    `json:"service_name" gorm:"column:service_name" description:"服务名"`
+	Host        string    `json:"host" gorm:"column:host" description:"服务名"`
+	Password    string    `json:"password" gorm:"column:password" description:"es密码" `
+	Username    string    `json:"username" gorm:"column:username" description:"es用户名" `
+	BackupCycle string    `json:"backup_cycle" gorm:"column:backup_cycle" description:"备份周期"`
+	KeepNumber  int64     `json:"keep_number"  gorm:"column:keep_number" description:"数据保留周期"`
+	IsDelete    int64     `json:"is_deleted" gorm:"column:is_deleted" description:"是否删除"`
+	Status      int64     `json:"status" gorm:"column:status" description:"开关"`
+	UpdatedAt   time.Time `json:"updated_at" gorm:"column:updated_at" description:"更新时间"`
+	CreatedAt   time.Time `json:"created_at" gorm:"column:created_at" description:"添加时间"`
 }
 
 func (e *EsTaskDB) TableName() string {

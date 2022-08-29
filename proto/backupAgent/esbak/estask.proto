@@ -15,10 +15,8 @@ message EsBakTaskADDInput  {
  string EsHost =1 ;
  string EsUser =2;
  string EsPassword = 3;
- string Index =7;
  string BackupCycle =4;
  int64 KeepNumber =5;
- int64  IsEsBakAll =6;
 }
 
 message EsBakTaskUpdateInput {
@@ -26,10 +24,8 @@ message EsBakTaskUpdateInput {
   string EsHost =1 ;
   string EsUser =2;
   string EsPassword = 3;
-  string Index =7;
   string BackupCycle =4;
   int64 KeepNumber =5;
-  int64  IsEsBakAll =6;
 }
 
 
@@ -57,9 +53,9 @@ message EsTaskListOutPut {
 message EsTaskListOutPutItem {
   int64 ID = 1;
   string EsHost =2 ;
-  string Index =3;
   string BackupCycle =5;
   int64 KeepNumber =6;
+  bool Status =7;
 }
 
 message EsTaskDetailOutPut {
@@ -71,8 +67,7 @@ message EsTaskInfo {
   string EsHost =1 ;
   string EsUser =2;
   string EsPassword = 3;
-  string Index =7;
   string BackupCycle =4;
   int64 KeepNumber =5;
-  int64  IsEsBakAll =6;
+  bool Status =7;
 }
