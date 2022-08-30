@@ -23,6 +23,8 @@ var (
 var Reg pkg.AgentRegister
 
 func InitResourceAndStart() error {
+	//打印logo信息
+	pkg.PrintLogo()
 	//初始化数据库
 	database.InitDB()
 	//注册服务
