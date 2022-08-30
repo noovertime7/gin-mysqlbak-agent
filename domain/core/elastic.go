@@ -51,7 +51,6 @@ func (e *esBakHandler) Start() error {
 	RunningCronJob[e.info.ESTaskInfo.ID] = e.c
 	e.c.Start()
 	log.Logger.Infof("创建Elastic备份任务%v,备份任务ID:%d,备份周期:%s", id, e.info.ESTaskInfo.ID, e.info.ESTaskInfo.BackupCycle)
-	fmt.Println("start = ", RunningCronJob)
 	return nil
 }
 
@@ -123,6 +122,7 @@ func (e *esBakHandler) Store(success bool, message string) error {
 			EndTimeInMillis:   0,
 			DurationInMillis:  0,
 			Message:           message,
+			IsDeleted:         0,
 		}
 		return esHistoryDb.Save(context.TODO(), database.Gorm)
 	}
@@ -144,6 +144,7 @@ func (e *esBakHandler) Store(success bool, message string) error {
 		EndTimeInMillis:   detail.EndTimeInMillis,
 		DurationInMillis:  detail.DurationInMillis,
 		Message:           detail.State,
+		IsDeleted:         0,
 	}
 	return esHistoryDb.Save(context.TODO(), database.Gorm)
 }

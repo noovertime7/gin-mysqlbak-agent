@@ -34,7 +34,7 @@ message ESHistoryListOutput {
 message ESHistoryListOutItem {
   int64 ID =1 ;
   int64 TaskID =9;
-  int64 UUID =10;
+  string UUID =10;
   int64 DurationInMillis =11;
   string Snapshot =2;
   string Repository =3;

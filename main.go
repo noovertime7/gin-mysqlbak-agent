@@ -63,6 +63,7 @@ func main() {
 		_ = bak.RegisterBakServiceHandler(microService.Server(), new(handler.BakHandler))
 		_ = esbak.RegisterEsServiceHandler(microService.Server(), new(handler.EsTaskHandler))
 		_ = esbak.RegisterEsBakServiceHandler(microService.Server(), handler.NewEsBakHandler())
+		_ = esbak.RegisterEsHistoryServiceHandler(microService.Server(), handler.NewEsHistoryHandler())
 		// Run microService
 		if err := microService.Run(); err != nil {
 			log.Fatal(err)
@@ -89,7 +90,6 @@ func main() {
 	microService.Options()
 	// Initialise microService
 	microService.Init()
-	// 启动所有备份任务，避免程序中止后，任务停止
 	// Register Handler
 	_ = host.RegisterHostHandler(microService.Server(), new(handler.HostHandler))
 	_ = task.RegisterTaskHandler(microService.Server(), new(handler.TaskHandler))
@@ -97,6 +97,7 @@ func main() {
 	_ = bak.RegisterBakServiceHandler(microService.Server(), new(handler.BakHandler))
 	_ = esbak.RegisterEsServiceHandler(microService.Server(), new(handler.EsTaskHandler))
 	_ = esbak.RegisterEsBakServiceHandler(microService.Server(), handler.NewEsBakHandler())
+	_ = esbak.RegisterEsHistoryServiceHandler(microService.Server(), handler.NewEsHistoryHandler())
 	// Run microService
 	if err := microService.Run(); err != nil {
 		log.Fatal(err)

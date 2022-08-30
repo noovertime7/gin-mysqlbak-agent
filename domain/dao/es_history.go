@@ -1,26 +1,29 @@
 package dao
 
 import (
+	"backupAgent/proto/backupAgent/esbak"
 	"context"
+	"errors"
 	"gorm.io/gorm"
 	"time"
 )
 
 type ESHistoryDB struct {
-	Id                int64     `gorm:"primary_key" description:"自增主键"`
-	TaskID            int64     `json:"task_id" gorm:"column:task_id;index:task_id" description:"任务id"`
-	Snapshot          string    `json:"snapshot"  gorm:"column:snapshot" description:"快照名字"`
-	Repository        string    `json:"repository" gorm:"column:repository" description:"仓库名"`
-	UUID              string    `json:"uuid"  gorm:"column:uuid" description:"UUID"`
-	Version           string    `json:"version"  gorm:"column:version" description:"版本"`
-	Indices           string    `json:"indices"  gorm:"column:indices;type:text" description:"包含索引"`
-	State             string    `json:"state"  gorm:"column:state" description:"状态"`
-	StartTime         time.Time `json:"start_time"  gorm:"column:start_time" description:"开始时间"`
-	StartTimeInMillis int64     `json:"start_time_in_millis"  gorm:"column:start_time_in_millis" description:"start_time_in_millis"`
-	EndTime           time.Time `json:"end_time"  gorm:"column:end_time" description:"结束时间"`
-	EndTimeInMillis   int64     `json:"end_time_in_millis"  gorm:"column:end_time_in_millis" description:"end_time_in_millis"`
-	DurationInMillis  int64     `json:"duration_in_millis"  gorm:"column:duration_in_millis" description:"消耗时间"`
-	Message           string    `json:"message"  gorm:"column:message" description:"备注"`
+	Id                int64     `gorm:"primary_key"  comment:"自增主键"`
+	TaskID            int64     `json:"task_id" gorm:"column:task_id;index:index_task_id"  comment:"任务id"`
+	Snapshot          string    `json:"snapshot"  gorm:"column:snapshot;index:index_snapshot"  comment:"快照名字"`
+	Repository        string    `json:"repository" gorm:"column:repository"  comment:"仓库名"`
+	UUID              string    `json:"uuid"  gorm:"column:uuid"  comment:"UUID"`
+	Version           string    `json:"version"  gorm:"column:version"  comment:"版本"`
+	Indices           string    `json:"indices"  gorm:"column:indices;type:text"  comment:"包含索引"`
+	State             string    `json:"state"  gorm:"column:state"  comment:"状态"`
+	StartTime         time.Time `json:"start_time"  gorm:"column:start_time"  comment:"开始时间"`
+	StartTimeInMillis int64     `json:"start_time_in_millis"  gorm:"column:start_time_in_millis"  comment:"start_time_in_millis"`
+	EndTime           time.Time `json:"end_time"  gorm:"column:end_time"  comment:"结束时间"`
+	EndTimeInMillis   int64     `json:"end_time_in_millis"  gorm:"column:end_time_in_millis"  comment:"end_time_in_millis"`
+	DurationInMillis  int64     `json:"duration_in_millis"  gorm:"column:duration_in_millis"  comment:"消耗时间"`
+	Message           string    `json:"message"  gorm:"column:message"  comment:"备注"`
+	IsDeleted         int64     `json:"is_deleted" gorm:"column:is_deleted;default:1"  comment:"软删除标记"`
 }
 
 func (e *ESHistoryDB) TableName() string {
@@ -29,4 +32,42 @@ func (e *ESHistoryDB) TableName() string {
 
 func (e *ESHistoryDB) Save(ctx context.Context, tx *gorm.DB) error {
 	return tx.WithContext(ctx).Save(e).Error
+}
+
+func (e *ESHistoryDB) Find(c context.Context, tx *gorm.DB, search *ESHistoryDB) (*ESHistoryDB, error) {
+	out := &ESHistoryDB{}
+	err := tx.WithContext(c).Where(search).Find(out).Error
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (e *ESHistoryDB) Updates(ctx context.Context, tx *gorm.DB) error {
+	if e.Id == 0 {
+		return errors.New("ID 为空")
+	}
+	return tx.WithContext(ctx).Table(e.TableName()).Where("id = ?", e.Id).Updates(e).Error
+}
+
+func (e *ESHistoryDB) PageList(c context.Context, tx *gorm.DB, params *esbak.GetEsHistoryListInput) ([]ESHistoryDB, int64, error) {
+	var total int64 = 0
+	var list []ESHistoryDB
+	offset := (params.PageNo - 1) * params.PageSize
+	query := tx.WithContext(c)
+	query = query.Table(e.TableName()).Where("is_deleted=0")
+	if params.Info != "" {
+		query = query.Where("(snapshot like ? or indices like ?)", "%"+params.Info+"%", "%"+params.Info+"%")
+	}
+	if params.Sort == "aesc" {
+		if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
+			return nil, 0, err
+		}
+	} else {
+		if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Order("id desc").Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
+			return nil, 0, err
+		}
+	}
+	query.Find(&list).Count(&total)
+	return list, total, nil
 }
