@@ -4,12 +4,12 @@ import (
 	"backupAgent/domain/config"
 	"backupAgent/domain/pkg"
 	"backupAgent/domain/pkg/database"
+	"backupAgent/domain/pkg/log"
 	"backupAgent/domain/service"
 	"backupAgent/proto/backupAgent/bakhistory"
 	"backupAgent/proto/backupAgent/host"
 	"backupAgent/proto/backupAgent/task"
 	"context"
-	"github.com/micro/go-micro/v2/util/log"
 	"time"
 )
 
@@ -29,9 +29,9 @@ func InitResourceAndStart() error {
 	go LoopRegister()
 	//启动状态为1的任务
 	if err := service.StartAllBakTask(context.Background()); err != nil {
-		log.Warn("程序启动，开启备份任务失败")
+		log.Logger.Warning("程序启动，开启备份任务失败")
 	}
-	log.Info("程序启动开启所有备份任务成功")
+	log.Logger.Info("程序启动开启所有备份任务成功")
 	return nil
 }
 
@@ -77,8 +77,9 @@ func GetFinishNum(ctx context.Context) (int, error) {
 }
 
 func LoopRegister() {
-	for {
-		log.Info("开启定时注册任务")
+	var registrationCycle = config.GetIntConf("register", "registrationCycle")
+	for range time.Tick(time.Duration(registrationCycle) * time.Minute) {
+		log.Logger.Info("开启定时注册任务")
 		taskNum, err := GetTaskNum(context.Background())
 		if err != nil {
 			return
@@ -90,11 +91,9 @@ func LoopRegister() {
 		Reg = pkg.NewAgentRegister(ServiceName, RegisterAddress, Content, taskNum, finishNum)
 		data, err := Reg.Register()
 		if err != nil {
-			log.Warn("注册失败", err.Error())
-			return
+			log.Logger.Warning("注册失败", err.Error())
+			continue
 		}
-		log.Info(data)
-		registrationCycle := config.GetIntConf("register", "registrationCycle")
-		time.Sleep(time.Duration(registrationCycle) * time.Minute)
+		log.Logger.Info(data)
 	}
 }
