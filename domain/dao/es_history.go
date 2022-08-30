@@ -23,7 +23,7 @@ type ESHistoryDB struct {
 	EndTimeInMillis   int64     `json:"end_time_in_millis"  gorm:"column:end_time_in_millis"  comment:"end_time_in_millis"`
 	DurationInMillis  int64     `json:"duration_in_millis"  gorm:"column:duration_in_millis"  comment:"消耗时间"`
 	Message           string    `json:"message"  gorm:"column:message"  comment:"备注"`
-	IsDeleted         int64     `json:"is_deleted" gorm:"column:is_deleted;default:1"  comment:"软删除标记"`
+	IsDeleted         int64     `json:"is_deleted" gorm:"column:is_deleted;type:int(12);default:0"  comment:"软删除标记"`
 }
 
 func (e *ESHistoryDB) TableName() string {

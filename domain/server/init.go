@@ -80,7 +80,7 @@ func GetFinishNum(ctx context.Context) (int, error) {
 
 func LoopRegister() {
 	var registrationCycle = config.GetIntConf("register", "registrationCycle")
-	for range time.Tick(time.Duration(registrationCycle) * time.Minute) {
+	for {
 		log.Logger.Info("开启定时注册任务")
 		taskNum, err := GetTaskNum(context.Background())
 		if err != nil {
@@ -94,8 +94,10 @@ func LoopRegister() {
 		data, err := Reg.Register()
 		if err != nil {
 			log.Logger.Warning("注册失败", err.Error())
+			time.Sleep(time.Duration(registrationCycle) * time.Minute)
 			continue
 		}
+		time.Sleep(time.Duration(registrationCycle) * time.Minute)
 		log.Logger.Info(data)
 	}
 }

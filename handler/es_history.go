@@ -22,8 +22,8 @@ func (e *esHistoryHandler) GetEsHistoryList(ctx context.Context, in *esbak.GetEs
 		log.Logger.Error("获取历史记录列表失败", err)
 		return err
 	}
-	out.EsHistoryListOutItem = data.GetEsHistoryListOutItem()
-	out.Total = data.GetTotal()
+	out.EsHistoryListOutItem = data.EsHistoryListOutItem
+	out.Total = data.Total
 	return nil
 }
 func (e *esHistoryHandler) DeleteESHistory(ctx context.Context, in *esbak.ESHistoryIDInput, out *esbak.ESHistoryOneMessage) error {

@@ -21,9 +21,15 @@ func (e *esHistoryService) GetESHistoryList(ctx context.Context, esHistoryInfo *
 	}
 	var OutList []*esbak.ESHistoryListOutItem
 	for _, listItem := range list {
+		esTaskDB := &dao.EsTaskDB{ID: listItem.TaskID}
+		taskinfo, err := esTaskDB.Find(ctx, database.Gorm, esTaskDB)
+		if err != nil {
+			return nil, err
+		}
 		outItem := &esbak.ESHistoryListOutItem{
 			ID:               listItem.Id,
 			TaskID:           listItem.TaskID,
+			Host:             taskinfo.Host,
 			UUID:             listItem.UUID,
 			DurationInMillis: listItem.DurationInMillis,
 			Snapshot:         listItem.Snapshot,

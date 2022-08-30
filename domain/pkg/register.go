@@ -2,10 +2,10 @@ package pkg
 
 import (
 	"backupAgent/domain/config"
+	"backupAgent/domain/pkg/log"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	log "github.com/micro/go-micro/v2/logger"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -45,7 +45,7 @@ func (r *registry) Register() (string, error) {
 	if err := enc.Encode(r); err != nil {
 		return "", err
 	}
-	log.Info("向server注册服务", registerUrl)
+	log.Logger.Info("register向server注册服务", registerUrl)
 	res, err := http.Post(registerUrl, "application/json", buf)
 	if err != nil {
 		return "", err
@@ -55,6 +55,7 @@ func (r *registry) Register() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	log.Logger.Infof("register注册服务响应：%s", string(msg))
 	return string(msg), err
 }
 
@@ -62,7 +63,7 @@ func (r *registry) DeRegister() (string, error) {
 	payload := strings.NewReader(fmt.Sprintf("{\"service_name\":\"%s\"}", r.ServiceName))
 	req, _ := http.NewRequest("PUT", deregisterUrl, payload)
 	req.Header.Add("Content-Type", "application/json")
-	log.Info("向server注销服务", deregisterUrl)
+	log.Logger.Info("register向server注销服务", deregisterUrl)
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
@@ -72,5 +73,6 @@ func (r *registry) DeRegister() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	log.Logger.Infof("register注销服务响应：%s", string(msg))
 	return string(msg), err
 }
