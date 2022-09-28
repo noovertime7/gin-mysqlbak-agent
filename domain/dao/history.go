@@ -1,8 +1,10 @@
 package dao
 
 import (
+	"backupAgent/domain/pkg"
 	"backupAgent/proto/backupAgent/bakhistory"
 	"context"
+	"fmt"
 	"gorm.io/gorm"
 	"time"
 )
@@ -46,10 +48,43 @@ func (b *BakHistory) PageList(c context.Context, tx *gorm.DB, params *bakhistory
 	query := tx.WithContext(c)
 	query = query.Table(b.TableName()).Where("is_deleted=0")
 	query.Find(&list).Count(&total)
-	if params.Info != "" {
-		query = query.Where("(host like ? or db_name like ?)", "%"+params.Info+"%", "%"+params.Info+"%")
+	if params.Status != "" {
+		switch params.Status {
+		case pkg.HistoryStatusAll:
+			if params.Info != "" {
+				searchInfo := "%" + params.Info
+				query = query.Where(fmt.Sprintf(" host like '%%%s' or db_name like'%%%s'  ", searchInfo, searchInfo))
+			} else {
+				query = query.Table(b.TableName()).Where("is_deleted = 0")
+			}
+		case pkg.HistoryStatusSuccess:
+			if params.Info != "" {
+				searchInfo := "%" + params.Info
+				query = query.Where("(host like ? or db_name like ?)", searchInfo, searchInfo)
+			} else {
+				query = query.Where("message = 'success' ")
+			}
+		case pkg.HistoryStatusFail:
+			if params.Info != "" {
+				searchInfo := "%" + params.Info
+				query = query.Where("host like ? or db_name like ?", searchInfo, searchInfo)
+			} else {
+				query = query.Where("message != 'success' ")
+			}
+		}
 	}
-	if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Order("id desc").Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
+	var sortRules string
+	switch params.SortOrder {
+	case "descend":
+		sortRules = "desc"
+	case "ascend":
+		sortRules = "asc"
+	}
+	if params.SortField == "" {
+		params.SortField = "id"
+		sortRules = "desc"
+	}
+	if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Order(fmt.Sprintf("%s %s", params.SortField, sortRules)).Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return nil, 0, err
 	}
 	return list, total, nil

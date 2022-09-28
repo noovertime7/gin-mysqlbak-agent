@@ -67,10 +67,10 @@ func GetTaskNum(ctx context.Context) (int, error) {
 func GetFinishNum(ctx context.Context) (int, error) {
 	h := &service.HistoryService{}
 	historyInfo, err := h.GetHistoryList(ctx, &bakhistory.HistoryListInput{
-		Info:     "",
-		PageNo:   1,
-		PageSize: 99999,
-		Sort:     "",
+		Info:      "",
+		PageNo:    1,
+		PageSize:  99999,
+		SortOrder: "",
 	})
 	if err != nil {
 		return 0, err

@@ -3,6 +3,7 @@ package service
 import (
 	"backupAgent/domain/dao"
 	"backupAgent/domain/pkg/database"
+	"backupAgent/domain/pkg/log"
 	"backupAgent/proto/backupAgent/bakhistory"
 	"context"
 	"fmt"
@@ -16,6 +17,15 @@ func (h *HistoryService) GetHistoryList(ctx context.Context, historyInfo *bakhis
 	list, total, err := historyDB.PageList(ctx, database.Gorm, historyInfo)
 	if err != nil {
 		return nil, err
+	}
+	if len(list) == 0 {
+		log.Logger.Warning("当前历史记录列表为空")
+		return &bakhistory.HistoryListOutput{
+			Total:              total,
+			HistoryListOutItem: []*bakhistory.HistoryListOutItem{},
+			PageNo:             historyInfo.PageNo,
+			PageSize:           historyInfo.PageSize,
+		}, nil
 	}
 	var outList []*bakhistory.HistoryListOutItem
 	for _, listIterm := range list {
@@ -50,10 +60,11 @@ func (h *HistoryService) DeleteHistory(ctx context.Context, historyInfo *bakhist
 
 func (h *HistoryService) GetHistoryNumInfo(ctx context.Context) (*bakhistory.HistoryNumInfoOut, error) {
 	data, err := h.GetHistoryList(ctx, &bakhistory.HistoryListInput{
-		Info:     "",
-		PageNo:   1,
-		PageSize: 99999,
-		Sort:     "",
+		Info:      "",
+		PageNo:    1,
+		PageSize:  99999,
+		SortField: "",
+		SortOrder: "",
 	})
 	if err != nil {
 		return nil, err
