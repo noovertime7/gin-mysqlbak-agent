@@ -12,6 +12,7 @@ require (
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/go-errors/errors v1.0.1
 	github.com/go-xorm/xorm v0.7.9
+	github.com/goccy/go-graphviz v0.0.9 // indirect
 	github.com/golang/protobuf v1.5.2
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/mailru/easyjson v0.7.7 // indirect
@@ -19,12 +20,18 @@ require (
 	github.com/micro/go-plugins/wrapper/trace/opentracing/v2 v2.9.1
 	github.com/minio/minio-go/v7 v7.0.34
 	github.com/noovertime7/mysqlbak v0.0.0-20220612083217-fdb12cd90242
+	github.com/ofabry/go-callvis v0.6.1 // indirect
 	github.com/olivere/elastic v6.2.37+incompatible
 	github.com/opentracing/opentracing-go v1.1.0
+	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
+	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
+	golang.org/x/sys v0.0.0-20220927170352-d9d178bc13c6 // indirect
+	golang.org/x/tools v0.1.12 // indirect
+	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/ini.v1 v1.66.6
 	gorm.io/driver/mysql v1.3.5

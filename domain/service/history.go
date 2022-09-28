@@ -5,6 +5,7 @@ import (
 	"backupAgent/domain/pkg/database"
 	"backupAgent/proto/backupAgent/bakhistory"
 	"context"
+	"fmt"
 	"strconv"
 )
 
@@ -45,4 +46,37 @@ func (h *HistoryService) DeleteHistory(ctx context.Context, historyInfo *bakhist
 	}
 	historyDB.IsDeleted = 1
 	return historyDB.Save(ctx, database.Gorm)
+}
+
+func (h *HistoryService) GetHistoryNumInfo(ctx context.Context) (*bakhistory.HistoryNumInfoOut, error) {
+	data, err := h.GetHistoryList(ctx, &bakhistory.HistoryListInput{
+		Info:     "",
+		PageNo:   1,
+		PageSize: 99999,
+		Sort:     "",
+	})
+	if err != nil {
+		return nil, err
+	}
+	//获取文件大小
+	var allSize int
+	for _, h := range data.HistoryListOutItem {
+		iSize, err := strconv.Atoi(h.FileSize)
+		if err != nil {
+			return nil, err
+		}
+		allSize += iSize
+	}
+	mbAllSize := fmt.Sprintf("%.2fMB", float64(allSize)/float64(1024))
+	//获取一周内任务数
+	his := &dao.BakHistory{}
+	dataList, err := his.FindByDate(ctx, database.Gorm, 7)
+	if err != nil {
+		return nil, err
+	}
+	return &bakhistory.HistoryNumInfoOut{
+		WeekNums:    int64(len(dataList)),
+		AllNums:     data.Total,
+		AllFileSize: mbAllSize,
+	}, err
 }

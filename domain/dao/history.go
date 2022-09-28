@@ -60,3 +60,9 @@ func (b *BakHistory) PageList(c context.Context, tx *gorm.DB, params *bakhistory
 	query.Find(&list).Count(&total)
 	return list, total, nil
 }
+
+// FindByDate 查询7天内数据
+func (b *BakHistory) FindByDate(ctx context.Context, tx *gorm.DB, num int) ([]BakHistory, error) {
+	var out []BakHistory
+	return out, tx.WithContext(ctx).Raw("SELECT * FROM bak_history WHERE date_sub(curdate(), interval ? day) <= date(bak_time);", num).Scan(&out).Error
+}

@@ -19,6 +19,8 @@ func (h *HistoryHandler) GetHistoryList(ctx context.Context, in *bakhistory.Hist
 	}
 	out.HistoryListOutItem = data.HistoryListOutItem
 	out.Total = data.Total
+	out.PageSize = in.PageSize
+	out.PageNo = in.PageNo
 	return nil
 }
 
@@ -30,5 +32,16 @@ func (h *HistoryHandler) DeleteHistory(ctx context.Context, in *bakhistory.Histo
 	}
 	out.Message = "删除成功"
 	out.OK = true
+	return nil
+}
+
+func (h *HistoryHandler) GetHistoryNumInfo(ctx context.Context, e *bakhistory.Empty, out *bakhistory.HistoryNumInfoOut) error {
+	data, err := HistoryService.GetHistoryNumInfo(ctx)
+	if err != nil {
+		return err
+	}
+	out.WeekNums = data.GetWeekNums()
+	out.AllFileSize = data.GetAllFileSize()
+	out.AllNums = data.GetAllNums()
 	return nil
 }
