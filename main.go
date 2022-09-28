@@ -14,6 +14,7 @@ import (
 	"github.com/micro/go-micro/v2"
 	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-plugins/wrapper/trace/opentracing/v2"
+	"os"
 	"time"
 )
 
@@ -50,6 +51,7 @@ func main() {
 					return err
 				}
 				log.Info(data)
+				os.Exit(0)
 				return nil
 			}),
 		)
@@ -83,6 +85,7 @@ func main() {
 				return err
 			}
 			log.Info(data)
+			os.Exit(0)
 			return nil
 		}),
 		//micro.Registry(reg),
