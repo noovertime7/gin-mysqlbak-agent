@@ -1,9 +1,11 @@
 package dao
 
 import (
+	"backupAgent/domain/pkg"
 	"backupAgent/proto/backupAgent/esbak"
 	"context"
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"time"
 )
@@ -56,18 +58,46 @@ func (e *ESHistoryDB) PageList(c context.Context, tx *gorm.DB, params *esbak.Get
 	offset := (params.PageNo - 1) * params.PageSize
 	query := tx.WithContext(c)
 	query = query.Table(e.TableName()).Where("is_deleted=0")
-	if params.Info != "" {
-		query = query.Where("(snapshot like ? or indices like ?)", "%"+params.Info+"%", "%"+params.Info+"%")
-	}
-	if params.Sort == "aesc" {
-		if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
-			return nil, 0, err
-		}
-	} else {
-		if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Order("id desc").Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
-			return nil, 0, err
-		}
-	}
 	query.Find(&list).Count(&total)
+	if params.Status != "" {
+		switch params.Status {
+		case pkg.HistoryStatusAll:
+			if params.Info != "" {
+				searchInfo := "%" + params.Info
+				query = query.Where(fmt.Sprintf(" snapshot like '%%%s' or indices like'%%%s'  ", searchInfo, searchInfo))
+			} else {
+				query = query.Table(e.TableName()).Where("is_deleted = 0")
+			}
+		case pkg.HistoryStatusSuccess:
+			if params.Info != "" {
+				searchInfo := "%" + params.Info
+				query = query.Where("(snapshot like ? or indices like ?)", searchInfo, searchInfo)
+			} else {
+				query = query.Where("message = 'success' ")
+			}
+		case pkg.HistoryStatusFail:
+			if params.Info != "" {
+				searchInfo := "%" + params.Info
+				query = query.Where("snapshot like ? or indices like ?", searchInfo, searchInfo)
+			} else {
+				query = query.Where("message != 'success' ")
+			}
+		}
+	}
+	var sortRules string
+	switch params.SortOrder {
+	case "descend":
+		sortRules = "desc"
+	case "ascend":
+		sortRules = "asc"
+	}
+	if params.SortField == "" {
+		params.SortField = "id"
+		sortRules = "desc"
+	}
+	if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Order(fmt.Sprintf("%s %s", params.SortField, sortRules)).Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
+		return nil, 0, err
+	}
+
 	return list, total, nil
 }

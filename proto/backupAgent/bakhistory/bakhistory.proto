@@ -1,6 +1,6 @@
 syntax = "proto3";
 package go.micro.service.backupAgent;
-option go_package="./;bakhistory";
+option go_package = "./;bakhistory";
 
 service History {
   rpc GetHistoryList(HistoryListInput) returns (HistoryListOutput) {}
@@ -11,10 +11,12 @@ service History {
 message Empty {}
 
 message HistoryListInput {
-  string Info =1 ;
-  int64 PageNo =2;
-  int64 PageSize =3 ;
-  string Sort =4;
+  string Info = 1 ;
+  int64 PageNo = 2;
+  int64 PageSize = 3 ;
+  string SortField = 5;
+  string SortOrder = 6;
+  string Status =7;
 }
 
 
@@ -23,47 +25,47 @@ message HistoryIDInput{
 }
 
 message HistoryOneMessage {
-  string Message  =1;
-  bool OK =2;
+  string Message = 1;
+  bool OK = 2;
 }
 
 message HistoryListOutput {
   // @inject_tag: json:"total"
-  int64 Total =1;
+  int64 Total = 1;
   // @inject_tag: json:"list"
-  repeated HistoryListOutItem historyListOutItem =2 ;
+  repeated HistoryListOutItem historyListOutItem = 2 ;
   // @inject_tag: json:"page_no"
-  int64 PageNo =3;
+  int64 PageNo = 3;
   // @inject_tag: json:"page_size"
-  int64 PageSize =4 ;
+  int64 PageSize = 4 ;
 }
 
 message HistoryListOutItem {
   // @inject_tag: json:"id"
-  int64 ID =1 ;
+  int64 ID = 1 ;
   // @inject_tag: json:"host"
-  string Host =2;
+  string Host = 2;
   // @inject_tag: json:"db_name"
-  string DBName =3;
+  string DBName = 3;
   // @inject_tag: json:"ding_status"
-  int64 DingStatus =4;
+  int64 DingStatus = 4;
   // @inject_tag: json:"oss_status"
-  int64  OSSStatus =5;
+  int64  OSSStatus = 5;
   // @inject_tag: json:"message"
-  string Message =6;
+  string Message = 6;
   // @inject_tag: json:"file_size"
-  string FileSize =7;
+  string FileSize = 7;
   // @inject_tag: json:"file_name"
-  string FileName =8;
+  string FileName = 8;
   // @inject_tag: json:"bak_time"
-  string BakTime=9;
+  string BakTime = 9;
 }
 
 message HistoryNumInfoOut {
   // @inject_tag: json:"week_nums"
-  int64 WeekNums =1;
+  int64 WeekNums = 1;
   // @inject_tag: json:"all_nums"
-  int64 AllNums =2;
+  int64 AllNums = 2;
   // @inject_tag: json:"all_filesize"
-  string  AllFileSize =3;
+  string  AllFileSize = 3;
 }
