@@ -45,19 +45,13 @@ func (b *BakHistory) PageList(c context.Context, tx *gorm.DB, params *bakhistory
 	offset := (params.PageNo - 1) * params.PageSize
 	query := tx.WithContext(c)
 	query = query.Table(b.TableName()).Where("is_deleted=0")
+	query.Find(&list).Count(&total)
 	if params.Info != "" {
 		query = query.Where("(host like ? or db_name like ?)", "%"+params.Info+"%", "%"+params.Info+"%")
 	}
-	if params.Sort == "aesc" {
-		if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
-			return nil, 0, err
-		}
-	} else {
-		if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Order("id desc").Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
-			return nil, 0, err
-		}
+	if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Order("id desc").Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
+		return nil, 0, err
 	}
-	query.Find(&list).Count(&total)
 	return list, total, nil
 }
 
