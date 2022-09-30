@@ -6,6 +6,7 @@ import (
 	"backupAgent/domain/pkg/log"
 	"backupAgent/staging/src/elasticbak"
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/olivere/elastic"
@@ -123,6 +124,10 @@ func (e *esBakHandler) Store(success bool, message string) error {
 			DurationInMillis:  0,
 			Message:           message,
 			IsDeleted:         0,
+			Status: sql.NullInt64{
+				Int64: 0,
+				Valid: true,
+			},
 		}
 		return esHistoryDb.Save(context.TODO(), database.Gorm)
 	}
@@ -145,6 +150,10 @@ func (e *esBakHandler) Store(success bool, message string) error {
 		DurationInMillis:  detail.DurationInMillis,
 		Message:           detail.State,
 		IsDeleted:         0,
+		Status: sql.NullInt64{
+			Int64: 1,
+			Valid: true,
+		},
 	}
 	return esHistoryDb.Save(context.TODO(), database.Gorm)
 }
