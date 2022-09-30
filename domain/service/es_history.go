@@ -36,9 +36,10 @@ func (e *esHistoryService) GetESHistoryList(ctx context.Context, esHistoryInfo *
 			Repository:       listItem.Repository,
 			Indices:          listItem.Indices,
 			State:            listItem.State,
-			StartTime:        listItem.StartTime.Format("2006年01月02日15:04:01"),
-			EndTime:          listItem.EndTime.Format("2006年01月02日15:04:01"),
+			StartTime:        listItem.StartTime.Format("2006年01月02日15:04:01:01"),
+			EndTime:          listItem.EndTime.Format("2006年01月02日15:04:01:01"),
 			Message:          listItem.Message,
+			Status:           listItem.Status.Int64,
 		}
 		OutList = append(OutList, outItem)
 	}
