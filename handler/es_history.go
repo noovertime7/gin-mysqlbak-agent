@@ -24,6 +24,8 @@ func (e *esHistoryHandler) GetEsHistoryList(ctx context.Context, in *esbak.GetEs
 	}
 	out.EsHistoryListOutItem = data.EsHistoryListOutItem
 	out.Total = data.Total
+	out.PageNo = data.PageNo
+	out.PageSize = data.PageSize
 	return nil
 }
 func (e *esHistoryHandler) DeleteESHistory(ctx context.Context, in *esbak.ESHistoryIDInput, out *esbak.ESHistoryOneMessage) error {

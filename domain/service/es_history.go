@@ -46,6 +46,8 @@ func (e *esHistoryService) GetESHistoryList(ctx context.Context, esHistoryInfo *
 	return &esbak.ESHistoryListOutput{
 		Total:                total,
 		EsHistoryListOutItem: OutList,
+		PageSize:             esHistoryInfo.PageSize,
+		PageNo:               esHistoryInfo.PageNo,
 	}, nil
 }
 
