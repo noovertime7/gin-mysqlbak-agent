@@ -2,6 +2,7 @@ package service
 
 import (
 	"backupAgent/domain/dao"
+	"backupAgent/domain/pkg"
 	"backupAgent/domain/pkg/database"
 	"backupAgent/domain/pkg/log"
 	"backupAgent/proto/backupAgent/host"
@@ -9,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"github.com/go-xorm/xorm"
+	"github.com/olivere/elastic"
 	"time"
 )
 
@@ -16,7 +18,7 @@ type HostService struct{}
 
 func (h *HostService) HostAdd(ctx context.Context, hostInfo *host.HostAddInput) error {
 	//进行主机检测避免添加无用信息
-	if err := HostPingCheck(hostInfo.UserName, hostInfo.Password, hostInfo.Host, ""); err != nil {
+	if err := HostPingCheck(hostInfo.UserName, hostInfo.Password, hostInfo.Host, "", pkg.HostType(hostInfo.Type)); err != nil {
 		log.Logger.Error("agent添加主机检测失败", err)
 		return err
 	}
@@ -27,6 +29,9 @@ func (h *HostService) HostAdd(ctx context.Context, hostInfo *host.HostAddInput) 
 		Content:    hostInfo.Content,
 		HostStatus: 1,
 		IsDeleted:  0,
+		Type:       hostInfo.Type,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 	return hostDB.Save(ctx, database.Gorm)
 }
@@ -46,7 +51,7 @@ func (h *HostService) HostDelete(ctx context.Context, hid int64) error {
 
 func (h *HostService) HostUpdate(ctx context.Context, hostInfo *host.HostUpdateInput) error {
 	//进行主机检测避免添加无用信息
-	if err := HostPingCheck(hostInfo.UserName, hostInfo.Password, hostInfo.Host, ""); err != nil {
+	if err := HostPingCheck(hostInfo.UserName, hostInfo.Password, hostInfo.Host, "", pkg.HostType(hostInfo.Type)); err != nil {
 		log.Logger.Error("agent添加主机检测失败", err)
 		return err
 	}
@@ -57,6 +62,7 @@ func (h *HostService) HostUpdate(ctx context.Context, hostInfo *host.HostUpdateI
 		Password:   hostInfo.Password,
 		Content:    hostInfo.Content,
 		HostStatus: 1,
+		Type:       hostInfo.Type,
 	}
 	return hostDB.Save(ctx, database.Gorm)
 }
@@ -82,6 +88,9 @@ func (h *HostService) GetHostList(ctx context.Context, hostInfo *host.HostListIn
 			HostStatus: listIterm.HostStatus,
 			Content:    listIterm.Content,
 			TaskNum:    total,
+			Type:       listIterm.Type,
+			CreateAt:   listIterm.CreatedAt.Format("2006年01月02日15:04:01"),
+			UpdateAt:   listIterm.UpdatedAt.Format("2006年01月02日15:04:01"),
 		}
 		outList = append(outList, outIterm)
 	}
@@ -91,7 +100,21 @@ func (h *HostService) GetHostList(ctx context.Context, hostInfo *host.HostListIn
 	}, nil
 }
 
-func HostPingCheck(User, Password, Host, DBName string) error {
+func HostPingCheck(User, Password, Host, DBName string, hostType pkg.HostType) error {
+	switch hostType {
+	case pkg.MysqlHost:
+		if err := MysqlHostCheck(User, Password, Host, DBName); err != nil {
+			return err
+		}
+	case pkg.ElasticHost:
+		if err := EsHostCheck(Host, User, Password); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func MysqlHostCheck(User, Password, Host, DBName string) error {
 	if DBName == "" {
 		DBName = "mysql"
 	}
@@ -104,6 +127,16 @@ func HostPingCheck(User, Password, Host, DBName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	if err = en.PingContext(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
+func EsHostCheck(host, user, password string) error {
+	if _, err := elastic.NewClient(
+		elastic.SetURL(host),
+		elastic.SetBasicAuth(user, password),
+		elastic.SetSniff(false)); err != nil {
 		return err
 	}
 	return nil

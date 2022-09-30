@@ -67,7 +67,7 @@ func (e *esBak) GetRepositoryDir() string {
 
 func (e *esBak) createRepository(ctx context.Context) error {
 	//仓库存在不需要创建
-	if e.IsRepositoryExist() {
+	if e.isRepositoryExist() {
 		return nil
 	}
 	createRepository := e.Client.SnapshotCreateRepository(e.RepositoryName)
@@ -84,7 +84,7 @@ func (e *esBak) createRepository(ctx context.Context) error {
 }
 
 func (e *esBak) GetRepository(ctx context.Context) (elastic.SnapshotGetRepositoryResponse, error) {
-	if !e.IsRepositoryExist() {
+	if !e.isRepositoryExist() {
 		return nil, errors.New("repository不存在")
 	}
 	return e.Client.SnapshotGetRepository(e.RepositoryName).Do(ctx)
@@ -116,7 +116,7 @@ func (e *esBak) DeleteSnapshot(ctx context.Context, snap string) error {
 	return errors.New("无报错但是Accepted返回不是true")
 }
 
-func (e *esBak) IsRepositoryExist() bool {
+func (e *esBak) isRepositoryExist() bool {
 	response, err := e.Client.SnapshotGetRepository(e.RepositoryName).Do(context.Background())
 	if err != nil {
 		log.Logger.Warn(err)

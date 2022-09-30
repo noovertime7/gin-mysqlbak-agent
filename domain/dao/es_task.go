@@ -11,9 +11,7 @@ import (
 type EsTaskDB struct {
 	ID          int64     `json:"id" gorm:"primary_key" description:"自增主键"`
 	ServiceName string    `json:"service_name" gorm:"column:service_name" description:"服务名"`
-	Host        string    `json:"host" gorm:"column:host" description:"服务名"`
-	Password    string    `json:"password" gorm:"column:password" description:"es密码" `
-	Username    string    `json:"username" gorm:"column:username" description:"es用户名" `
+	HostID      int64     `json:"host_id"  gorm:"column:host_id" description:"主机id"`
 	BackupCycle string    `json:"backup_cycle" gorm:"column:backup_cycle" description:"备份周期"`
 	KeepNumber  int64     `json:"keep_number"  gorm:"column:keep_number" description:"数据保留周期"`
 	IsDelete    int64     `json:"is_deleted" gorm:"column:is_deleted" description:"是否删除"`
@@ -74,5 +72,10 @@ func (e *EsTaskDB) TaskDetail(ctx context.Context, tx *gorm.DB, search *EsTaskDB
 	if err != nil {
 		return nil, err
 	}
-	return &EsTaskDetail{ESTaskInfo: esinfoRes}, nil
+	hostDB := &HostDatabase{Id: esinfoRes.HostID}
+	host, err := hostDB.Find(ctx, tx, hostDB)
+	if err != nil {
+		return nil, err
+	}
+	return &EsTaskDetail{ESTaskInfo: esinfoRes, HostInfo: host}, nil
 }

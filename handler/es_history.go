@@ -38,3 +38,15 @@ func (e *esHistoryHandler) DeleteESHistory(ctx context.Context, in *esbak.ESHist
 	out.OK = true
 	return nil
 }
+
+func (e *esHistoryHandler) GetEsHistoryDetail(ctx context.Context, in *esbak.ESHistoryIDInput, out *esbak.EsHistoryDetailOut) error {
+	data, err := ESHistoryService.GetEsHistoryDetail(ctx, in)
+	if err != nil {
+		log.Logger.Error("获取历史记录详情失败", err)
+		return err
+	}
+	out.ESTaskDetail = data.GetESTaskDetail()
+	out.EsHistoryDetail = data.EsHistoryDetail
+	out.EsHostDetail = data.GetEsHostDetail()
+	return nil
+}

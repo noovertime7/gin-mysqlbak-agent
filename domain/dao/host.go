@@ -4,16 +4,20 @@ import (
 	"backupAgent/proto/backupAgent/host"
 	"context"
 	"gorm.io/gorm"
+	"time"
 )
 
 type HostDatabase struct {
-	Id         int64  `json:"host_id" gorm:"primary_key" description:"自增主键"`
-	Host       string `json:"host" gorm:"column:host" description:"任务id"`
-	User       string `json:"user"  gorm:"column:user" description:"是否发送钉钉消息"`
-	Password   string `json:"password"  gorm:"column:password" description:"accessToken"`
-	Content    string `json:"content" gorm:"column:content"`
-	HostStatus int64  `json:"host_status" gorm:"column:host_status"`
-	IsDeleted  int64  `json:"is_deleted" gorm:"column:is_deleted"`
+	Id         int64     `json:"host_id" gorm:"primary_key" description:"自增主键"`
+	Host       string    `json:"host" gorm:"column:host" description:"任务id"`
+	User       string    `json:"user"  gorm:"column:user" description:"是否发送钉钉消息"`
+	Password   string    `json:"password"  gorm:"column:password" description:"accessToken"`
+	Content    string    `json:"content" gorm:"column:content"`
+	HostStatus int64     `json:"host_status" gorm:"column:host_status"`
+	IsDeleted  int64     `json:"is_deleted" gorm:"column:is_deleted"`
+	Type       int64     `json:"type" gorm:"column:type"`
+	UpdatedAt  time.Time `json:"updated_at" gorm:"column:updated_at" description:"更新时间"`
+	CreatedAt  time.Time `json:"created_at" gorm:"column:created_at" description:"添加时间"`
 }
 
 func (h *HostDatabase) TableName() string {

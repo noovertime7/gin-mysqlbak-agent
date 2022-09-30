@@ -2,6 +2,7 @@ package service
 
 import (
 	"backupAgent/domain/dao"
+	"backupAgent/domain/pkg"
 	"backupAgent/domain/pkg/database"
 	"backupAgent/proto/backupAgent/esbak"
 	"context"
@@ -26,10 +27,15 @@ func (e *esHistoryService) GetESHistoryList(ctx context.Context, esHistoryInfo *
 		if err != nil {
 			return nil, err
 		}
+		hostDB := &dao.HostDatabase{Id: taskinfo.HostID}
+		host, err := hostDB.Find(ctx, database.Gorm, hostDB)
+		if err != nil {
+			return nil, err
+		}
 		outItem := &esbak.ESHistoryListOutItem{
 			ID:               listItem.Id,
 			TaskID:           listItem.TaskID,
-			Host:             taskinfo.Host,
+			Host:             host.Host,
 			UUID:             listItem.UUID,
 			DurationInMillis: listItem.DurationInMillis,
 			Snapshot:         listItem.Snapshot,
@@ -48,6 +54,56 @@ func (e *esHistoryService) GetESHistoryList(ctx context.Context, esHistoryInfo *
 		EsHistoryListOutItem: OutList,
 		PageSize:             esHistoryInfo.PageSize,
 		PageNo:               esHistoryInfo.PageNo,
+	}, nil
+}
+
+func (e *esHistoryService) GetEsHistoryDetail(ctx context.Context, esHistoryInfo *esbak.ESHistoryIDInput) (*esbak.EsHistoryDetailOut, error) {
+	//1、先查出history
+	historyDB := &dao.ESHistoryDB{Id: esHistoryInfo.ID}
+	history, err := historyDB.Find(ctx, database.Gorm, historyDB)
+	if err != nil {
+		return nil, err
+	}
+	//2、根据task_id查出task
+	taskDB := &dao.EsTaskDB{ID: history.TaskID}
+	task, err := taskDB.Find(ctx, database.Gorm, taskDB)
+	if err != nil {
+		return nil, err
+	}
+	//3、根据task的host_id查出host
+	hostDB := &dao.HostDatabase{Id: task.HostID}
+	host, err := hostDB.Find(ctx, database.Gorm, hostDB)
+	if err != nil {
+		return nil, err
+	}
+	return &esbak.EsHistoryDetailOut{
+		EsHostDetail: &esbak.EsHostDetail{
+			HostID:   host.Id,
+			Host:     host.Host,
+			CreateAt: host.CreatedAt.Format("2006年01月02日15:04:01"),
+			UpdateAt: host.UpdatedAt.Format("2006年01月02日15:04:01"),
+		},
+		ESTaskDetail: &esbak.ESTaskDetail{
+			BackupCycle: task.BackupCycle,
+			KeepNumber:  task.KeepNumber,
+			Status:      pkg.IntToBool(task.Status),
+			CreateAt:    task.CreatedAt.Format("2006年01月02日15:04:01"),
+		},
+		EsHistoryDetail: &esbak.ESHistoryListOutItem{
+			ID:               history.Id,
+			TaskID:           history.TaskID,
+			UUID:             history.UUID,
+			DurationInMillis: history.DurationInMillis,
+			Host:             host.Host,
+			Snapshot:         history.Snapshot,
+			Repository:       history.Repository,
+			Indices:          history.Indices,
+			State:            history.State,
+			StartTime:        history.StartTime.Format("2006年01月02日15:04:01"),
+			EndTime:          history.EndTime.Format("2006年01月02日15:04:01"),
+			Message:          history.Message,
+			Status:           history.Status.Int64,
+		},
 	}, nil
 }
 

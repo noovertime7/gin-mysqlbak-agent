@@ -7,6 +7,7 @@ option go_package = "./;esbak";
 service EsHistoryService {
   rpc GetEsHistoryList(GetEsHistoryListInput) returns (ESHistoryListOutput) {}
   rpc DeleteESHistory(ESHistoryIDInput) returns(ESHistoryOneMessage) {}
+  rpc GetEsHistoryDetail(ESHistoryIDInput) returns(EsHistoryDetailOut) {}
 }
 
 message GetEsHistoryListInput {
@@ -66,4 +67,36 @@ message ESHistoryListOutItem {
   string Message = 8;
   // @inject_tag: json:"status"
   int64 Status = 13;
+}
+
+
+message EsHostDetail {
+  // @inject_tag: json:"host_id"
+  int64 HostID = 4;
+  // @inject_tag: json:"host"
+  string Host = 1;
+  // @inject_tag: json:"create_at"
+  string CreateAt = 2;
+  // @inject_tag: json:"update_at"
+  string UpdateAt = 3;
+}
+
+message ESTaskDetail {
+  // @inject_tag: json:"backup_cycle"
+  string BackupCycle = 1;
+  // @inject_tag: json:"keep_number"
+  int64 KeepNumber = 2;
+  // @inject_tag: json:"status"
+  bool Status = 3;
+  // @inject_tag: json:"create_at"
+  string CreateAt = 4;
+}
+
+message EsHistoryDetailOut {
+  // @inject_tag: json:"es_host_detail"
+  EsHostDetail EsHostDetail = 1;
+  // @inject_tag: json:"es_task_detail"
+  ESTaskDetail ESTaskDetail = 2;
+  // @inject_tag: json:"es_history_detail"
+  ESHistoryListOutItem  EsHistoryDetail = 3 ;
 }

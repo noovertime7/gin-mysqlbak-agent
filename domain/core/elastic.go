@@ -28,9 +28,9 @@ var RunningCronJob = make(map[int64]*cron.Cron)
 
 func NewEsBakHandler(detail *dao.EsTaskDetail) (*esBakHandler, error) {
 	baker, err := elasticbak.NewEsBaker(&elasticbak.EsHostInfo{
-		Host:     detail.ESTaskInfo.Host,
-		UserName: detail.ESTaskInfo.Username,
-		Password: detail.ESTaskInfo.Password,
+		Host:     detail.HostInfo.Host,
+		UserName: detail.HostInfo.User,
+		Password: detail.HostInfo.Password,
 	})
 	if err != nil {
 		return nil, err

@@ -47,6 +47,8 @@ func (e *EsTaskHandler) GetTaskList(ctx context.Context, in *esbak.EsTaskListInp
 	}
 	out.EsTaskListOutPutItem = data.GetEsTaskListOutPutItem()
 	out.Total = data.Total
+	out.PageNo = data.PageNo
+	out.PageSize = data.PageSize
 	return nil
 }
 func (e *EsTaskHandler) GetTaskDetail(ctx context.Context, in *esbak.EsTaskIDInput, out *esbak.EsTaskDetailOutPut) error {

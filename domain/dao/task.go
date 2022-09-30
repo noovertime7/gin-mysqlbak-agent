@@ -92,7 +92,8 @@ func (t *TaskInfo) TaskDetail(ctx context.Context, tx *gorm.DB, search *TaskInfo
 	if err != nil {
 		return nil, err
 	}
-	hostinfo := &HostDatabase{Id: infores.HostID}
+	hostinfo := &HostDatabase{Id: infores.HostID, Type: 1}
+	//查询mysql数据，type =1
 	hostinfores, err := hostinfo.Find(ctx, tx, hostinfo)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err

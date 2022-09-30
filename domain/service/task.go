@@ -201,7 +201,8 @@ func TaskTest(ctx context.Context, hid int64, DBName, endpoint string) error {
 	if err != nil {
 		return err
 	}
-	if err := HostPingCheck(host.User, host.Password, host.Host, DBName); err != nil {
+	log.Logger.Info("开始任务测试")
+	if err := HostPingCheck(host.User, host.Password, host.Host, DBName, 1); err != nil {
 		return err
 	}
 	if err := EndPointTest(endpoint); err != nil {
