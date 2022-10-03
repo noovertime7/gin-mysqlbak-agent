@@ -2,6 +2,7 @@ package service
 
 import (
 	"backupAgent/domain/dao"
+	"backupAgent/domain/pkg"
 	"backupAgent/domain/pkg/database"
 	"backupAgent/domain/pkg/log"
 	"backupAgent/proto/backupAgent/bakhistory"
@@ -62,7 +63,7 @@ func (h *HistoryService) GetHistoryNumInfo(ctx context.Context) (*bakhistory.His
 	data, err := h.GetHistoryList(ctx, &bakhistory.HistoryListInput{
 		Info:      "",
 		PageNo:    1,
-		PageSize:  99999,
+		PageSize:  pkg.LargePageSize,
 		SortField: "",
 		SortOrder: "",
 	})

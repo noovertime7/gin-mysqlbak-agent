@@ -71,6 +71,13 @@ func (b *BakHistory) PageList(c context.Context, tx *gorm.DB, params *bakhistory
 			} else {
 				query = query.Where("message != 'success' ")
 			}
+		default:
+			if params.Info != "" {
+				searchInfo := "%" + params.Info
+				query = query.Where(fmt.Sprintf(" host like '%%%s' or db_name like'%%%s'  ", searchInfo, searchInfo))
+			} else {
+				query = query.Table(b.TableName()).Where("is_deleted = 0")
+			}
 		}
 	}
 	var sortRules string
@@ -79,6 +86,8 @@ func (b *BakHistory) PageList(c context.Context, tx *gorm.DB, params *bakhistory
 		sortRules = "desc"
 	case "ascend":
 		sortRules = "asc"
+	default:
+		sortRules = "desc"
 	}
 	if params.SortField == "" {
 		params.SortField = "id"
@@ -93,5 +102,5 @@ func (b *BakHistory) PageList(c context.Context, tx *gorm.DB, params *bakhistory
 // FindByDate 查询7天内数据
 func (b *BakHistory) FindByDate(ctx context.Context, tx *gorm.DB, num int) ([]BakHistory, error) {
 	var out []BakHistory
-	return out, tx.WithContext(ctx).Raw("SELECT * FROM bak_history WHERE date_sub(curdate(), interval ? day) <= date(bak_time);", num).Scan(&out).Error
+	return out, tx.WithContext(ctx).Raw("SELECT * FROM bak_history WHERE is_deleted !=1 and date_sub(curdate(), interval ? day) <= date(bak_time);", num).Scan(&out).Error
 }

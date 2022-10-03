@@ -54,7 +54,7 @@ func GetTaskNum(ctx context.Context) (int, error) {
 			HostID:   hostInfo.ID,
 			Info:     "",
 			PageNo:   1,
-			PageSize: 99999,
+			PageSize: pkg.LargePageSize,
 		})
 		if err != nil {
 			return 0, err
@@ -69,7 +69,7 @@ func GetFinishNum(ctx context.Context) (int, error) {
 	historyInfo, err := h.GetHistoryList(ctx, &bakhistory.HistoryListInput{
 		Info:      "",
 		PageNo:    1,
-		PageSize:  99999,
+		PageSize:  pkg.LargePageSize,
 		SortOrder: "",
 	})
 	if err != nil {

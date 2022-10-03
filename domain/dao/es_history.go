@@ -23,6 +23,7 @@ type ESHistoryDB struct {
 	StartTime         time.Time     `json:"start_time"  gorm:"column:start_time"  comment:"开始时间"`
 	StartTimeInMillis int64         `json:"start_time_in_millis"  gorm:"column:start_time_in_millis"  comment:"start_time_in_millis"`
 	EndTime           time.Time     `json:"end_time"  gorm:"column:end_time"  comment:"结束时间"`
+	BakTime           time.Time     `json:"bak_time" gorm:"column:bak_time" comment:"备份时间"`
 	EndTimeInMillis   int64         `json:"end_time_in_millis"  gorm:"column:end_time_in_millis"  comment:"end_time_in_millis"`
 	DurationInMillis  int64         `json:"duration_in_millis"  gorm:"column:duration_in_millis"  comment:"消耗时间"`
 	Message           string        `json:"message"  gorm:"column:message"  comment:"备注"`
@@ -84,6 +85,13 @@ func (e *ESHistoryDB) PageList(c context.Context, tx *gorm.DB, params *esbak.Get
 			} else {
 				query = query.Where("message != 'success' ")
 			}
+		default:
+			if params.Info != "" {
+				searchInfo := "%" + params.Info
+				query = query.Where(fmt.Sprintf(" snapshot like '%%%s' or indices like'%%%s'  ", searchInfo, searchInfo))
+			} else {
+				query = query.Table(e.TableName()).Where("is_deleted = 0")
+			}
 		}
 	}
 	var sortRules string
@@ -92,6 +100,8 @@ func (e *ESHistoryDB) PageList(c context.Context, tx *gorm.DB, params *esbak.Get
 		sortRules = "desc"
 	case "ascend":
 		sortRules = "asc"
+	default:
+		sortRules = "desc"
 	}
 	if params.SortField == "" {
 		params.SortField = "id"
@@ -101,4 +111,10 @@ func (e *ESHistoryDB) PageList(c context.Context, tx *gorm.DB, params *esbak.Get
 		return nil, 0, err
 	}
 	return list, total, nil
+}
+
+// FindByDate 查询7天内数据
+func (e *ESHistoryDB) FindByDate(ctx context.Context, tx *gorm.DB, num int) ([]ESHistoryDB, error) {
+	var out []ESHistoryDB
+	return out, tx.WithContext(ctx).Raw("SELECT * FROM es_bak_history WHERE is_deleted != 1 and date_sub(curdate(), interval ? day) <= date(bak_time);", num).Scan(&out).Error
 }

@@ -80,13 +80,14 @@ func (e *esHistoryService) GetEsHistoryDetail(ctx context.Context, esHistoryInfo
 		EsHostDetail: &esbak.EsHostDetail{
 			HostID:   host.Id,
 			Host:     host.Host,
+			Status:   host.HostStatus,
 			CreateAt: host.CreatedAt.Format("2006年01月02日15:04:01"),
 			UpdateAt: host.UpdatedAt.Format("2006年01月02日15:04:01"),
 		},
 		ESTaskDetail: &esbak.ESTaskDetail{
 			BackupCycle: task.BackupCycle,
 			KeepNumber:  task.KeepNumber,
-			Status:      pkg.IntToBool(task.Status),
+			Status:      task.Status,
 			CreateAt:    task.CreatedAt.Format("2006年01月02日15:04:01"),
 		},
 		EsHistoryDetail: &esbak.ESHistoryListOutItem{
@@ -115,4 +116,41 @@ func (e *esHistoryService) DeleteEsHistory(ctx context.Context, esHistoryInfo *e
 	}
 	es.IsDeleted = 1
 	return es.Updates(ctx, database.Gorm)
+}
+
+func (e *esHistoryService) GetEsHistoryNumInfo(ctx context.Context) (*esbak.EsHistoryNumInfoOut, error) {
+	var (
+		weekNums int64
+		failNums int64
+	)
+	info := &esbak.GetEsHistoryListInput{
+		Info:      "",
+		PageNo:    1,
+		PageSize:  pkg.LargePageSize,
+		SortField: "",
+		SortOrder: "",
+		Status:    pkg.HistoryStatusAll,
+	}
+	list, err := e.GetESHistoryList(ctx, info)
+	if err != nil {
+		return nil, err
+	}
+	//查询7天内任务数量
+	esHistoryDB := &dao.ESHistoryDB{}
+	data, err := esHistoryDB.FindByDate(ctx, database.Gorm, 7)
+	if err != nil {
+		return nil, err
+	}
+	weekNums = int64(len(data))
+	for _, h := range list.EsHistoryListOutItem {
+		//统计快照失败的数量
+		if h.Status != 1 {
+			failNums++
+		}
+	}
+	return &esbak.EsHistoryNumInfoOut{
+		AllNums:  list.Total,
+		WeekNums: weekNums,
+		FailNums: failNums,
+	}, nil
 }

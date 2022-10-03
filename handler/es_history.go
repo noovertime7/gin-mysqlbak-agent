@@ -13,8 +13,7 @@ func NewEsHistoryHandler() *esHistoryHandler {
 
 var ESHistoryService = service.NewESHistoryService()
 
-type esHistoryHandler struct {
-}
+type esHistoryHandler struct{}
 
 func (e *esHistoryHandler) GetEsHistoryList(ctx context.Context, in *esbak.GetEsHistoryListInput, out *esbak.ESHistoryListOutput) error {
 	data, err := ESHistoryService.GetESHistoryList(ctx, in)
@@ -48,5 +47,17 @@ func (e *esHistoryHandler) GetEsHistoryDetail(ctx context.Context, in *esbak.ESH
 	out.ESTaskDetail = data.GetESTaskDetail()
 	out.EsHistoryDetail = data.EsHistoryDetail
 	out.EsHostDetail = data.GetEsHostDetail()
+	return nil
+}
+
+func (e *esHistoryHandler) GetEsHistoryNumInfo(ctx context.Context, em *esbak.EsHistoryEmpty, out *esbak.EsHistoryNumInfoOut) error {
+	data, err := ESHistoryService.GetEsHistoryNumInfo(ctx)
+	if err != nil {
+		log.Logger.Error("获取历史记录数量信息失败", err)
+		return err
+	}
+	out.AllNums = data.AllNums
+	out.WeekNums = data.WeekNums
+	out.FailNums = data.FailNums
 	return nil
 }
