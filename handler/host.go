@@ -49,5 +49,7 @@ func (h *HostHandler) GetHostList(ctx context.Context, in *host.HostListInput, o
 	}
 	out.Total = data.Total
 	out.ListItem = data.ListItem
+	out.PageNo = in.PageNo
+	out.PageSize = in.PageSize
 	return nil
 }
