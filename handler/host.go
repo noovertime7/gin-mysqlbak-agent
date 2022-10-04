@@ -20,7 +20,7 @@ func (h *HostHandler) AddHost(ctx context.Context, in *host.HostAddInput, out *h
 	out.OK = true
 	return nil
 }
-func (h *HostHandler) DeleteHost(ctx context.Context, in *host.HostDeleteInput, out *host.HostOneMessage) error {
+func (h *HostHandler) DeleteHost(ctx context.Context, in *host.HostIDInput, out *host.HostOneMessage) error {
 	if err := s.HostDelete(ctx, in.ID); err != nil {
 		out.Message = err.Error()
 		out.OK = false
@@ -51,5 +51,14 @@ func (h *HostHandler) GetHostList(ctx context.Context, in *host.HostListInput, o
 	out.ListItem = data.ListItem
 	out.PageNo = in.PageNo
 	out.PageSize = in.PageSize
+	return nil
+}
+
+func (h *HostHandler) TestHost(ctx context.Context, in *host.HostIDInput, out *host.HostOneMessage) error {
+	if err := s.TestHost(ctx, in.ID); err != nil {
+		return err
+	}
+	out.Message = "主机在线，测试成功"
+	out.OK = true
 	return nil
 }

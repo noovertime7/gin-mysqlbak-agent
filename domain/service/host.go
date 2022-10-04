@@ -51,6 +51,7 @@ func (h *HostService) HostDelete(ctx context.Context, hid int64) error {
 
 func (h *HostService) HostUpdate(ctx context.Context, hostInfo *host.HostUpdateInput) error {
 	//进行主机检测避免添加无用信息
+	log.Logger.Debug("Host更新入参", hostInfo)
 	if err := HostPingCheck(hostInfo.UserName, hostInfo.Password, hostInfo.Host, "", pkg.HostType(hostInfo.Type)); err != nil {
 		log.Logger.Error("agent添加主机检测失败", err)
 		return err
@@ -64,7 +65,7 @@ func (h *HostService) HostUpdate(ctx context.Context, hostInfo *host.HostUpdateI
 		HostStatus: 1,
 		Type:       hostInfo.Type,
 	}
-	return hostDB.Save(ctx, database.Gorm)
+	return hostDB.Updates(ctx, database.Gorm)
 }
 
 func (h *HostService) GetHostList(ctx context.Context, hostInfo *host.HostListInput) (*host.HostListOutPut, error) {
@@ -100,6 +101,16 @@ func (h *HostService) GetHostList(ctx context.Context, hostInfo *host.HostListIn
 	}, nil
 }
 
+// TestHost 测试主机连通性
+func (h *HostService) TestHost(ctx context.Context, hid int64) error {
+	hostDB := &dao.HostDatabase{Id: hid}
+	Host, err := hostDB.Find(ctx, database.Gorm, hostDB)
+	if err != nil {
+		return err
+	}
+	return HostPingCheck(Host.User, Host.Password, Host.Host, "", pkg.HostType(Host.Type))
+}
+
 func HostPingCheck(User, Password, Host, DBName string, hostType pkg.HostType) error {
 	switch hostType {
 	case pkg.MysqlHost:
@@ -121,7 +132,6 @@ func MysqlHostCheck(User, Password, Host, DBName string) error {
 	en, err := xorm.NewEngine("mysql", User+":"+Password+"@tcp("+Host+")/"+DBName+"?charset=utf8&parseTime=true")
 	defer en.Close()
 	if err != nil {
-		log.Logger.Errorf("创建数据库连接失败:%s", err.Error())
 		return err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)

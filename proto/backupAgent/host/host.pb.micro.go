@@ -43,9 +43,10 @@ func NewHostEndpoints() []*api.Endpoint {
 
 type HostService interface {
 	AddHost(ctx context.Context, in *HostAddInput, opts ...client.CallOption) (*HostOneMessage, error)
-	DeleteHost(ctx context.Context, in *HostDeleteInput, opts ...client.CallOption) (*HostOneMessage, error)
+	DeleteHost(ctx context.Context, in *HostIDInput, opts ...client.CallOption) (*HostOneMessage, error)
 	UpdateHost(ctx context.Context, in *HostUpdateInput, opts ...client.CallOption) (*HostOneMessage, error)
 	GetHostList(ctx context.Context, in *HostListInput, opts ...client.CallOption) (*HostListOutPut, error)
+	TestHost(ctx context.Context, in *HostIDInput, opts ...client.CallOption) (*HostOneMessage, error)
 }
 
 type hostService struct {
@@ -70,7 +71,7 @@ func (c *hostService) AddHost(ctx context.Context, in *HostAddInput, opts ...cli
 	return out, nil
 }
 
-func (c *hostService) DeleteHost(ctx context.Context, in *HostDeleteInput, opts ...client.CallOption) (*HostOneMessage, error) {
+func (c *hostService) DeleteHost(ctx context.Context, in *HostIDInput, opts ...client.CallOption) (*HostOneMessage, error) {
 	req := c.c.NewRequest(c.name, "Host.DeleteHost", in)
 	out := new(HostOneMessage)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -100,21 +101,33 @@ func (c *hostService) GetHostList(ctx context.Context, in *HostListInput, opts .
 	return out, nil
 }
 
+func (c *hostService) TestHost(ctx context.Context, in *HostIDInput, opts ...client.CallOption) (*HostOneMessage, error) {
+	req := c.c.NewRequest(c.name, "Host.TestHost", in)
+	out := new(HostOneMessage)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Host service
 
 type HostHandler interface {
 	AddHost(context.Context, *HostAddInput, *HostOneMessage) error
-	DeleteHost(context.Context, *HostDeleteInput, *HostOneMessage) error
+	DeleteHost(context.Context, *HostIDInput, *HostOneMessage) error
 	UpdateHost(context.Context, *HostUpdateInput, *HostOneMessage) error
 	GetHostList(context.Context, *HostListInput, *HostListOutPut) error
+	TestHost(context.Context, *HostIDInput, *HostOneMessage) error
 }
 
 func RegisterHostHandler(s server.Server, hdlr HostHandler, opts ...server.HandlerOption) error {
 	type host interface {
 		AddHost(ctx context.Context, in *HostAddInput, out *HostOneMessage) error
-		DeleteHost(ctx context.Context, in *HostDeleteInput, out *HostOneMessage) error
+		DeleteHost(ctx context.Context, in *HostIDInput, out *HostOneMessage) error
 		UpdateHost(ctx context.Context, in *HostUpdateInput, out *HostOneMessage) error
 		GetHostList(ctx context.Context, in *HostListInput, out *HostListOutPut) error
+		TestHost(ctx context.Context, in *HostIDInput, out *HostOneMessage) error
 	}
 	type Host struct {
 		host
@@ -131,7 +144,7 @@ func (h *hostHandler) AddHost(ctx context.Context, in *HostAddInput, out *HostOn
 	return h.HostHandler.AddHost(ctx, in, out)
 }
 
-func (h *hostHandler) DeleteHost(ctx context.Context, in *HostDeleteInput, out *HostOneMessage) error {
+func (h *hostHandler) DeleteHost(ctx context.Context, in *HostIDInput, out *HostOneMessage) error {
 	return h.HostHandler.DeleteHost(ctx, in, out)
 }
 
@@ -141,4 +154,8 @@ func (h *hostHandler) UpdateHost(ctx context.Context, in *HostUpdateInput, out *
 
 func (h *hostHandler) GetHostList(ctx context.Context, in *HostListInput, out *HostListOutPut) error {
 	return h.HostHandler.GetHostList(ctx, in, out)
+}
+
+func (h *hostHandler) TestHost(ctx context.Context, in *HostIDInput, out *HostOneMessage) error {
+	return h.HostHandler.TestHost(ctx, in, out)
 }

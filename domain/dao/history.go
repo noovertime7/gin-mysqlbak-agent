@@ -18,7 +18,7 @@ type BakHistory struct {
 	DingStatus int64     `gorm:"column:ding_status"  description:"OSS保存状态"`
 	BakStatus  int64     `gorm:"column:bak_status" description:"备份状态"`
 	Msg        string    `gorm:"column:message" description:"消息"`
-	FileSize   int64     `gorm:"column:filesize" description:"文件大小"`
+	FileSize   int64     `gorm:"column:file_size" description:"文件大小"`
 	FileName   string    `gorm:"column:filename" description:"文件名"`
 	BakTime    time.Time `gorm:"column:bak_time" description:"备份时间"`
 	IsDeleted  int64     `json:"is_deleted" gorm:"column:is_deleted"`

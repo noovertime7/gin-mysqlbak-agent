@@ -57,8 +57,8 @@ func (t *TaskInfo) PageList(ctx context.Context, tx *gorm.DB, params *task.TaskL
 	var list []*TaskInfo
 	offset := (params.PageNo - 1) * params.PageSize
 	query := tx.WithContext(ctx)
-	query.Find(&list).Count(&total)
 	query = query.Table(t.TableName()).Where("is_deleted=0 and host_id = ?", params.HostID)
+	query.Find(&list).Count(&total)
 	if params.Info != "" {
 		query = query.Where("(db_name like ? or service_name like ? )", "%"+params.Info+"%", "%"+params.Info+"%")
 	}

@@ -5,9 +5,10 @@ option go_package = "./;host";
 
 service Host {
   rpc AddHost(HostAddInput) returns (HostOneMessage) {}
-  rpc DeleteHost(HostDeleteInput) returns (HostOneMessage) {}
+  rpc DeleteHost(HostIDInput) returns (HostOneMessage) {}
   rpc UpdateHost(HostUpdateInput) returns (HostOneMessage) {}
   rpc GetHostList(HostListInput) returns (HostListOutPut) {}
+  rpc TestHost(HostIDInput) returns (HostOneMessage) {}
 }
 
 
@@ -26,7 +27,7 @@ message HostAddInput{
 
 
 
-message HostDeleteInput {
+message HostIDInput {
   // @inject_tag: json:"id" form:"id" uri:"id"
   int64 ID = 1 ;
 }
@@ -86,6 +87,8 @@ message HostListInput {
   int64 PageNo = 2;
   // @inject_tag: json:"page_size"
   int64 PageSize = 3 ;
+  // @inject_tag: json:"type"
+  int64 Type =4;
 }
 
 message HostListOutPut {

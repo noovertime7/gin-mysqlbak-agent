@@ -28,6 +28,10 @@ func (h *HostDatabase) Save(ctx context.Context, tx *gorm.DB) error {
 	return tx.WithContext(ctx).Save(h).Error
 }
 
+func (h *HostDatabase) Updates(ctx context.Context, tx *gorm.DB) error {
+	return tx.WithContext(ctx).Table(h.TableName()).Updates(h).Error
+}
+
 func (h *HostDatabase) Find(ctx context.Context, tx *gorm.DB, search *HostDatabase) (*HostDatabase, error) {
 	out := &HostDatabase{}
 	err := tx.WithContext(ctx).Where(search).Find(out).Error
@@ -56,9 +60,9 @@ func (h *HostDatabase) PageList(ctx context.Context, tx *gorm.DB, params *host.H
 	var list []*HostDatabase
 	offset := (params.PageNo - 1) * params.PageSize
 	query := tx.WithContext(ctx)
-	query = query.Table(h.TableName()).Where("is_deleted=0")
+	query = query.Table(h.TableName()).Where("is_deleted=0 and type = ?", params.Type)
 	if params.Info != "" {
-		query = query.Where("(host like ? )", "%"+params.Info+"%")
+		query = query.Where("(type = ? and host like ? )", params.Type, "%"+params.Info+"%")
 	}
 	if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Order("id desc").Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return nil, 0, err
