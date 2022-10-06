@@ -743,8 +743,8 @@ type TaskDetailOutPut struct {
 	Content string `protobuf:"bytes,2,opt,name=Content,proto3" json:"content"`
 	// @inject_tag: json:"host_status"
 	HostStatus int64 `protobuf:"varint,3,opt,name=HostStatus,proto3" json:"host_status"`
-	// @inject_tag: json:"task_id"
-	TaskID int64 `protobuf:"varint,5,opt,name=TaskID,proto3" json:"task_id"`
+	// @inject_tag: json:"id"
+	TaskID int64 `protobuf:"varint,5,opt,name=TaskID,proto3" json:"id"`
 	// @inject_tag: json:"host_id"
 	HostID int64 `protobuf:"varint,6,opt,name=HostID,proto3" json:"host_id"`
 	// @inject_tag: json:"db_name"

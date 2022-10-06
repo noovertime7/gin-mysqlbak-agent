@@ -109,7 +109,7 @@ message TaskDetailOutPut {
   string Content = 2 ;
   // @inject_tag: json:"host_status"
   int64 HostStatus = 3 ;
-  // @inject_tag: json:"task_id"
+  // @inject_tag: json:"id"
   int64 TaskID = 5;
   // @inject_tag: json:"host_id"
   int64 HostID = 6;
