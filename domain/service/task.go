@@ -8,7 +8,6 @@ import (
 	"backupAgent/proto/backupAgent/task"
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -142,8 +141,8 @@ func (t *TaskService) TaskList(ctx context.Context, taskinfo *task.TaskListInput
 			BackupCycle: pkg.CornExprToTime(listIterm.BackupCycle),
 			KeepNumber:  listIterm.KeepNumber,
 			CreateAt:    listIterm.CreatedAt.Format("2006年01月02日15:04"),
+			Status:      listIterm.Status,
 		}
-		outItem.Status = pkg.IntToBool(listIterm.Status)
 		outList = append(outList, outItem)
 	}
 	out := &task.TaskListOutPut{
@@ -156,40 +155,31 @@ func (t *TaskService) TaskList(ctx context.Context, taskinfo *task.TaskListInput
 func (t *TaskService) TaskDetail(ctx context.Context, taskInfo *task.TaskIDInput) (*task.TaskDetailOutPut, error) {
 	taskDb := &dao.TaskInfo{Id: taskInfo.ID}
 	taskDetailInfo, err := taskDb.TaskDetail(ctx, database.Gorm, taskDb)
-	fmt.Println(taskDetailInfo.Info)
 	if err != nil {
 		return nil, err
 	}
 	out := &task.TaskDetailOutPut{
-		HostInfo: &task.HostInfo{
-			Host:       taskDetailInfo.Host.Host,
-			Content:    taskDetailInfo.Host.Content,
-			HostStatus: taskDetailInfo.Host.HostStatus,
-		},
-		DingInfo: &task.DingInfo{
-			IsDingSend:      taskDetailInfo.Ding.IsDingSend,
-			DingAccessToken: taskDetailInfo.Ding.DingAccessToken,
-			DingSecret:      taskDetailInfo.Ding.DingSecret,
-		},
-		OssInfo: &task.OssInfo{
-			IsOssSave:  taskDetailInfo.Oss.IsOssSave,
-			OssType:    taskDetailInfo.Oss.OssType,
-			Endpoint:   taskDetailInfo.Oss.Endpoint,
-			OssAccess:  taskDetailInfo.Oss.OssAccess,
-			OssSecret:  taskDetailInfo.Oss.OssSecret,
-			BucketName: taskDetailInfo.Oss.BucketName,
-			Directory:  taskDetailInfo.Oss.Directory,
-		},
-		TaskInfo: &task.TaskInfo{
-			TaskID:      taskDetailInfo.Info.Id,
-			HostID:      taskDetailInfo.Info.HostID,
-			DBName:      taskDetailInfo.Info.DBName,
-			ServiceName: taskDetailInfo.Info.ServiceName,
-			BackupCycle: taskDetailInfo.Info.BackupCycle,
-			KeepNumber:  taskDetailInfo.Info.KeepNumber,
-			Status:      taskDetailInfo.Info.Status,
-			CreateAt:    taskDetailInfo.Info.CreatedAt.Format("2006年01月02日15:04"),
-		},
+		Host:            taskDetailInfo.Host.Host,
+		Content:         taskDetailInfo.Host.Content,
+		HostStatus:      taskDetailInfo.Host.HostStatus,
+		IsDingSend:      taskDetailInfo.Ding.IsDingSend,
+		DingAccessToken: taskDetailInfo.Ding.DingAccessToken,
+		DingSecret:      taskDetailInfo.Ding.DingSecret,
+		IsOssSave:       taskDetailInfo.Oss.IsOssSave,
+		OssType:         taskDetailInfo.Oss.OssType,
+		Endpoint:        taskDetailInfo.Oss.Endpoint,
+		OssAccess:       taskDetailInfo.Oss.OssAccess,
+		OssSecret:       taskDetailInfo.Oss.OssSecret,
+		BucketName:      taskDetailInfo.Oss.BucketName,
+		Directory:       taskDetailInfo.Oss.Directory,
+		TaskID:          taskDetailInfo.Info.Id,
+		HostID:          taskDetailInfo.Info.HostID,
+		DBName:          taskDetailInfo.Info.DBName,
+		ServiceName:     taskDetailInfo.Info.ServiceName,
+		BackupCycle:     taskDetailInfo.Info.BackupCycle,
+		KeepNumber:      taskDetailInfo.Info.KeepNumber,
+		Status:          taskDetailInfo.Info.Status,
+		CreateAt:        taskDetailInfo.Info.CreatedAt.Format("2006年01月02日15:04"),
 	}
 	return out, nil
 }

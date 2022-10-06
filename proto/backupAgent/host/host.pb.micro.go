@@ -47,6 +47,7 @@ type HostService interface {
 	UpdateHost(ctx context.Context, in *HostUpdateInput, opts ...client.CallOption) (*HostOneMessage, error)
 	GetHostList(ctx context.Context, in *HostListInput, opts ...client.CallOption) (*HostListOutPut, error)
 	TestHost(ctx context.Context, in *HostIDInput, opts ...client.CallOption) (*HostOneMessage, error)
+	GetHostNames(ctx context.Context, in *HostNamesInput, opts ...client.CallOption) (*HostNames, error)
 }
 
 type hostService struct {
@@ -111,6 +112,16 @@ func (c *hostService) TestHost(ctx context.Context, in *HostIDInput, opts ...cli
 	return out, nil
 }
 
+func (c *hostService) GetHostNames(ctx context.Context, in *HostNamesInput, opts ...client.CallOption) (*HostNames, error) {
+	req := c.c.NewRequest(c.name, "Host.GetHostNames", in)
+	out := new(HostNames)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Host service
 
 type HostHandler interface {
@@ -119,6 +130,7 @@ type HostHandler interface {
 	UpdateHost(context.Context, *HostUpdateInput, *HostOneMessage) error
 	GetHostList(context.Context, *HostListInput, *HostListOutPut) error
 	TestHost(context.Context, *HostIDInput, *HostOneMessage) error
+	GetHostNames(context.Context, *HostNamesInput, *HostNames) error
 }
 
 func RegisterHostHandler(s server.Server, hdlr HostHandler, opts ...server.HandlerOption) error {
@@ -128,6 +140,7 @@ func RegisterHostHandler(s server.Server, hdlr HostHandler, opts ...server.Handl
 		UpdateHost(ctx context.Context, in *HostUpdateInput, out *HostOneMessage) error
 		GetHostList(ctx context.Context, in *HostListInput, out *HostListOutPut) error
 		TestHost(ctx context.Context, in *HostIDInput, out *HostOneMessage) error
+		GetHostNames(ctx context.Context, in *HostNamesInput, out *HostNames) error
 	}
 	type Host struct {
 		host
@@ -158,4 +171,8 @@ func (h *hostHandler) GetHostList(ctx context.Context, in *HostListInput, out *H
 
 func (h *hostHandler) TestHost(ctx context.Context, in *HostIDInput, out *HostOneMessage) error {
 	return h.HostHandler.TestHost(ctx, in, out)
+}
+
+func (h *hostHandler) GetHostNames(ctx context.Context, in *HostNamesInput, out *HostNames) error {
+	return h.HostHandler.GetHostNames(ctx, in, out)
 }

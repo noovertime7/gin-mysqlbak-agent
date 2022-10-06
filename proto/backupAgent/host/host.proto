@@ -9,6 +9,7 @@ service Host {
   rpc UpdateHost(HostUpdateInput) returns (HostOneMessage) {}
   rpc GetHostList(HostListInput) returns (HostListOutPut) {}
   rpc TestHost(HostIDInput) returns (HostOneMessage) {}
+  rpc GetHostNames(HostNamesInput) returns (HostNames) {}
 }
 
 
@@ -24,7 +25,6 @@ message HostAddInput{
   // @inject_tag: json:"type" form:"type" uri:"type"
   int64 Type = 6;
 }
-
 
 
 message HostIDInput {
@@ -70,6 +70,21 @@ message ListItem {
   string  UpdateAt = 12;
 }
 
+message HostNamesInput {
+  int64  Type =1;
+}
+
+message HostNames {
+  // @inject_tag: json:"list"
+  repeated HostNameInfo HostNameInfo =1;
+}
+
+message HostNameInfo {
+  // @inject_tag: json:"host_id"
+  int64 HostID  =1;
+  // @inject_tag: json:"host"
+  string Host =2;
+}
 
 
 message HostOneMessage {
@@ -87,8 +102,6 @@ message HostListInput {
   int64 PageNo = 2;
   // @inject_tag: json:"page_size"
   int64 PageSize = 3 ;
-  // @inject_tag: json:"type"
-  int64 Type =4;
 }
 
 message HostListOutPut {

@@ -101,6 +101,29 @@ func (h *HostService) GetHostList(ctx context.Context, hostInfo *host.HostListIn
 	}, nil
 }
 
+func (h *HostService) GetHostNames(ctx context.Context, HostType int64) (*host.HostNames, error) {
+	hostDB := &dao.HostDatabase{}
+	hosts, _, err := hostDB.PageList(ctx, database.Gorm, &host.HostListInput{
+		Info:     "",
+		PageNo:   1,
+		PageSize: pkg.LargePageSize,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var out []*host.HostNameInfo
+	for _, h := range hosts {
+		if h.Type == HostType {
+			outItem := &host.HostNameInfo{
+				HostID: h.Id,
+				Host:   h.Host,
+			}
+			out = append(out, outItem)
+		}
+	}
+	return &host.HostNames{HostNameInfo: out}, nil
+}
+
 // TestHost 测试主机连通性
 func (h *HostService) TestHost(ctx context.Context, hid int64) error {
 	hostDB := &dao.HostDatabase{Id: hid}

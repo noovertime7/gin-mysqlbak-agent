@@ -62,3 +62,12 @@ func (h *HostHandler) TestHost(ctx context.Context, in *host.HostIDInput, out *h
 	out.OK = true
 	return nil
 }
+
+func (h *HostHandler) GetHostNames(ctx context.Context, in *host.HostNamesInput, out *host.HostNames) error {
+	data, err := s.GetHostNames(ctx, in.Type)
+	if err != nil {
+		return err
+	}
+	out.HostNameInfo = data.GetHostNameInfo()
+	return nil
+}

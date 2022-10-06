@@ -61,9 +61,6 @@ func (t *TaskHandler) TaskDetail(ctx context.Context, in *task.TaskIDInput, out 
 		log.Logger.Error("查询Task详情失败")
 		return err
 	}
-	out.OssInfo = data.OssInfo
-	out.HostInfo = data.HostInfo
-	out.DingInfo = data.DingInfo
-	out.TaskInfo = data.TaskInfo
+	*out = *data
 	return nil
 }
