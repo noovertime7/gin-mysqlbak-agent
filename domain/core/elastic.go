@@ -20,17 +20,17 @@ type esBakHandler struct {
 	c            *cron.Cron
 	esBaker      elasticbak.EsBaker
 	lock         sync.RWMutex
-	info         *dao.EsTaskDetail
+	info         *dao.TaskDetail
 	snapShotName string
 }
 
 var RunningCronJob = make(map[int64]*cron.Cron)
 
-func NewEsBakHandler(detail *dao.EsTaskDetail) (*esBakHandler, error) {
+func NewEsBakHandler(detail *dao.TaskDetail) (*esBakHandler, error) {
 	baker, err := elasticbak.NewEsBaker(&elasticbak.EsHostInfo{
-		Host:     detail.HostInfo.Host,
-		UserName: detail.HostInfo.User,
-		Password: detail.HostInfo.Password,
+		Host:     detail.Host.Host,
+		UserName: detail.Host.User,
+		Password: detail.Host.Password,
 	})
 	if err != nil {
 		return nil, err
@@ -45,13 +45,13 @@ func NewEsBakHandler(detail *dao.EsTaskDetail) (*esBakHandler, error) {
 func (e *esBakHandler) Start() error {
 	e.lock.RLock()
 	defer e.lock.RUnlock()
-	id, err := e.c.AddJob(e.info.ESTaskInfo.BackupCycle, e)
+	id, err := e.c.AddJob(e.info.Info.BackupCycle, e)
 	if err != nil {
 		return err
 	}
-	RunningCronJob[e.info.ESTaskInfo.ID] = e.c
+	RunningCronJob[e.info.Info.Id] = e.c
 	e.c.Start()
-	log.Logger.Infof("创建Elastic备份任务%v,备份任务ID:%d,备份周期:%s", id, e.info.ESTaskInfo.ID, e.info.ESTaskInfo.BackupCycle)
+	log.Logger.Infof("创建Elastic备份任务%v,备份任务ID:%d,备份周期:%s", id, e.info.Info.Id, e.info.Info.BackupCycle)
 	return nil
 }
 
@@ -77,18 +77,18 @@ func (e *esBakHandler) Run() {
 }
 
 func (e *esBakHandler) Stop() error {
-	log.Logger.Debugf("当前备份任务列表%v,传入ID:%v", RunningCronJob, e.info.ESTaskInfo.ID)
+	log.Logger.Debugf("当前备份任务列表%v,传入ID:%v", RunningCronJob, e.info.Info.Id)
 	if err := e.isStart(); err != nil {
 		return err
 	}
 	e.lock.Lock()
 	defer e.lock.Unlock()
 	for index, corn := range RunningCronJob {
-		if index == e.info.ESTaskInfo.ID {
+		if index == e.info.Info.Id {
 			corn.Stop()
 		}
 	}
-	delete(RunningCronJob, e.info.ESTaskInfo.ID)
+	delete(RunningCronJob, e.info.Info.Id)
 	log.Logger.Info("停止任务成功", RunningCronJob)
 	return nil
 }
@@ -110,7 +110,7 @@ func (e *esBakHandler) Store(success bool, message string) error {
 	//如果创建失败
 	if !success {
 		esHistoryDb := &dao.ESHistoryDB{
-			TaskID:            e.info.ESTaskInfo.ID,
+			TaskID:            e.info.Info.Id,
 			Snapshot:          "快照失败",
 			Repository:        e.esBaker.GetRepositoryName(),
 			UUID:              "快照失败",
@@ -137,7 +137,7 @@ func (e *esBakHandler) Store(success bool, message string) error {
 		return err
 	}
 	esHistoryDb := &dao.ESHistoryDB{
-		TaskID:            e.info.ESTaskInfo.ID,
+		TaskID:            e.info.Info.Id,
 		Snapshot:          detail.Snapshot,
 		Repository:        e.esBaker.GetRepositoryName(),
 		UUID:              detail.UUID,
@@ -163,7 +163,7 @@ func (e *esBakHandler) Store(success bool, message string) error {
 func (e *esBakHandler) isStart() error {
 	e.lock.RLock()
 	defer e.lock.RUnlock()
-	if _, ok := RunningCronJob[e.info.ESTaskInfo.ID]; !ok {
+	if _, ok := RunningCronJob[e.info.Info.Id]; !ok {
 		return errors.New("当前任务未启动")
 	}
 	return nil

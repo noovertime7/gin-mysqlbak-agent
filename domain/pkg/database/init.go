@@ -77,7 +77,6 @@ func initTables(db *gorm.DB) error {
 		&dao.BakHistory{},
 		&dao.DingDatabase{},
 		&dao.OssDatabase{},
-		&dao.EsTaskDB{},
 		&dao.ESHistoryDB{},
 	)
 }

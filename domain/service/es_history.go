@@ -22,7 +22,7 @@ func (e *esHistoryService) GetESHistoryList(ctx context.Context, esHistoryInfo *
 	}
 	var OutList []*esbak.ESHistoryListOutItem
 	for _, listItem := range list {
-		esTaskDB := &dao.EsTaskDB{ID: listItem.TaskID}
+		esTaskDB := &dao.TaskInfo{Id: listItem.TaskID}
 		taskinfo, err := esTaskDB.Find(ctx, database.Gorm, esTaskDB)
 		if err != nil {
 			return nil, err
@@ -65,7 +65,7 @@ func (e *esHistoryService) GetEsHistoryDetail(ctx context.Context, esHistoryInfo
 		return nil, err
 	}
 	//2、根据task_id查出task
-	taskDB := &dao.EsTaskDB{ID: history.TaskID}
+	taskDB := &dao.TaskInfo{Id: history.TaskID}
 	task, err := taskDB.Find(ctx, database.Gorm, taskDB)
 	if err != nil {
 		return nil, err

@@ -14,7 +14,7 @@ func NewEsBakService() *esBakService {
 }
 
 func (e *esBakService) Start(ctx context.Context, taskID int64) error {
-	taskInfo := &dao.EsTaskDB{ID: taskID}
+	taskInfo := &dao.TaskInfo{Id: taskID}
 	detail, err := taskInfo.TaskDetail(ctx, database.Gorm, taskInfo)
 	if err != nil {
 		return err
@@ -31,7 +31,7 @@ func (e *esBakService) Start(ctx context.Context, taskID int64) error {
 }
 
 func (e *esBakService) Stop(ctx context.Context, taskID int64) error {
-	taskInfo := &dao.EsTaskDB{ID: taskID}
+	taskInfo := &dao.TaskInfo{Id: taskID}
 	detail, err := taskInfo.TaskDetail(ctx, database.Gorm, taskInfo)
 	if err != nil {
 		return err

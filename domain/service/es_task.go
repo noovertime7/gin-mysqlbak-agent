@@ -6,6 +6,7 @@ import (
 	"backupAgent/domain/pkg"
 	"backupAgent/domain/pkg/database"
 	"backupAgent/proto/backupAgent/esbak"
+	"backupAgent/proto/backupAgent/task"
 	"context"
 	"time"
 )
@@ -17,11 +18,12 @@ func NewEsTaskService() *ESTaskService {
 }
 
 func (e *ESTaskService) TaskADD(ctx context.Context, taskInfo *esbak.EsBakTaskADDInput) error {
-	esTaskDB := &dao.EsTaskDB{
+	esTaskDB := &dao.TaskInfo{
 		ServiceName: config.GetStringConf("base", "serviceName"),
 		HostID:      taskInfo.HostID,
 		BackupCycle: taskInfo.BackupCycle,
 		KeepNumber:  taskInfo.KeepNumber,
+		IsAllDBBak:  1,
 		IsDelete:    0,
 		Status:      0,
 		UpdatedAt:   time.Now(),
@@ -31,7 +33,7 @@ func (e *ESTaskService) TaskADD(ctx context.Context, taskInfo *esbak.EsBakTaskAD
 }
 
 func (e *ESTaskService) TaskDelete(ctx context.Context, id int64) error {
-	esDB := &dao.EsTaskDB{ID: id}
+	esDB := &dao.TaskInfo{Id: id}
 	esTaskDB, err := esDB.Find(ctx, database.Gorm, esDB)
 	if err != nil {
 		return err
@@ -41,8 +43,8 @@ func (e *ESTaskService) TaskDelete(ctx context.Context, id int64) error {
 }
 
 func (e *ESTaskService) TaskUpdate(ctx context.Context, taskInfo *esbak.EsBakTaskUpdateInput) error {
-	esTaskDB := &dao.EsTaskDB{
-		ID:          taskInfo.ID,
+	esTaskDB := &dao.TaskInfo{
+		Id:          taskInfo.ID,
 		HostID:      taskInfo.HostID,
 		BackupCycle: taskInfo.BackupCycle,
 		KeepNumber:  taskInfo.KeepNumber,
@@ -52,8 +54,13 @@ func (e *ESTaskService) TaskUpdate(ctx context.Context, taskInfo *esbak.EsBakTas
 }
 
 func (e *ESTaskService) GetTaskList(ctx context.Context, taskInfo *esbak.EsTaskListInput) (*esbak.EsTaskListOutPut, error) {
-	var esDB *dao.EsTaskDB
-	list, total, err := esDB.PageList(ctx, database.Gorm, taskInfo)
+	var esDB *dao.TaskInfo
+	list, total, err := esDB.PageList(ctx, database.Gorm, &task.TaskListInput{
+		HostID:   taskInfo.HostID,
+		Info:     taskInfo.Info,
+		PageNo:   taskInfo.PageNo,
+		PageSize: taskInfo.PageSize,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +72,7 @@ func (e *ESTaskService) GetTaskList(ctx context.Context, taskInfo *esbak.EsTaskL
 			return nil, err
 		}
 		outItem := &esbak.EsTaskListOutPutItem{
-			ID:          listIterm.ID,
+			ID:          listIterm.Id,
 			EsHost:      host.Host,
 			BackupCycle: pkg.CornExprToTime(listIterm.BackupCycle),
 			KeepNumber:  listIterm.KeepNumber,
@@ -84,8 +91,8 @@ func (e *ESTaskService) GetTaskList(ctx context.Context, taskInfo *esbak.EsTaskL
 }
 
 func (e *ESTaskService) GetTaskDetail(ctx context.Context, id int64) (*esbak.EsTaskDetailOutPut, error) {
-	taskInfo := &dao.EsTaskDB{}
-	detail, err := taskInfo.TaskDetail(ctx, database.Gorm, &dao.EsTaskDB{ID: id})
+	taskInfo := &dao.TaskInfo{}
+	detail, err := taskInfo.TaskDetail(ctx, database.Gorm, &dao.TaskInfo{Id: id})
 	if err != nil {
 		return nil, err
 	}
@@ -98,10 +105,10 @@ func (e *ESTaskService) GetTaskDetail(ctx context.Context, id int64) (*esbak.EsT
 		EsHost:      host.Host,
 		EsUser:      host.User,
 		EsPassword:  host.Password,
-		BackupCycle: detail.ESTaskInfo.BackupCycle,
-		KeepNumber:  detail.ESTaskInfo.KeepNumber,
-		Status:      pkg.IntToBool(detail.ESTaskInfo.Status),
-		CreateAt:    detail.ESTaskInfo.CreatedAt.Format("2006年01月02日15:04:01"),
+		BackupCycle: detail.Info.BackupCycle,
+		KeepNumber:  detail.Info.KeepNumber,
+		Status:      pkg.IntToBool(detail.Info.Status),
+		CreateAt:    detail.Info.CreatedAt.Format("2006年01月02日15:04:01"),
 	}}
 	return out, nil
 }
