@@ -70,6 +70,7 @@ func (t *TaskService) TaskDelete(ctx context.Context, taskinfo *task.TaskIDInput
 		return err
 	}
 	task.IsDelete = 1
+	task.DeletedAt = time.Now()
 	return task.Save(ctx, database.Gorm)
 }
 
@@ -141,7 +142,10 @@ func (t *TaskService) TaskList(ctx context.Context, taskinfo *task.TaskListInput
 			BackupCycle: pkg.CornExprToTime(listIterm.BackupCycle),
 			KeepNumber:  listIterm.KeepNumber,
 			CreateAt:    listIterm.CreatedAt.Format("2006年01月02日15:04"),
+			UpdateAt:    listIterm.UpdatedAt.Format("2006年01月02日15:04"),
 			Status:      listIterm.Status,
+			IsDeleted:   listIterm.IsDelete,
+			DeletedAt:   listIterm.DeletedAt.Format("2006年01月02日15:04"),
 		}
 		outList = append(outList, outItem)
 	}
@@ -152,6 +156,44 @@ func (t *TaskService) TaskList(ctx context.Context, taskinfo *task.TaskListInput
 	log.Logger.Debug("Service层查询Task列表，出参:", out)
 	return out, nil
 }
+
+func (t *TaskService) UnscopedTaskList(ctx context.Context, taskinfo *task.TaskListInput) (*task.TaskListOutPut, error) {
+	log.Logger.Debug("UnscopedService层查询Task列表，入参:", taskinfo)
+	taskDB := &dao.TaskInfo{}
+	list, total, err := taskDB.UnscopedPageList(ctx, database.Gorm, taskinfo)
+	if err != nil {
+		return nil, err
+	}
+	var outList []*task.TaskListItem
+	for _, listIterm := range list {
+		hostDB := &dao.HostDatabase{Id: listIterm.HostID}
+		databseres, err := hostDB.Find(ctx, database.Gorm, hostDB)
+		if err != nil {
+			return nil, err
+		}
+		outItem := &task.TaskListItem{
+			ID:          listIterm.Id,
+			Host:        databseres.Host,
+			HostID:      listIterm.HostID,
+			DBName:      listIterm.DBName,
+			BackupCycle: pkg.CornExprToTime(listIterm.BackupCycle),
+			KeepNumber:  listIterm.KeepNumber,
+			CreateAt:    listIterm.CreatedAt.Format("2006年01月02日15:04"),
+			UpdateAt:    listIterm.UpdatedAt.Format("2006年01月02日15:04"),
+			Status:      listIterm.Status,
+			IsDeleted:   listIterm.IsDelete,
+			DeletedAt:   listIterm.DeletedAt.Format("2006年01月02日15:04"),
+		}
+		outList = append(outList, outItem)
+	}
+	out := &task.TaskListOutPut{
+		Total:        total,
+		TaskListItem: outList,
+	}
+	log.Logger.Debug("UnscopedService层查询Task列表，出参:", out)
+	return out, nil
+}
+
 func (t *TaskService) TaskDetail(ctx context.Context, taskInfo *task.TaskIDInput) (*task.TaskDetailOutPut, error) {
 	taskDb := &dao.TaskInfo{Id: taskInfo.ID}
 	taskDetailInfo, err := taskDb.TaskDetail(ctx, database.Gorm, taskDb)

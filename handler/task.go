@@ -55,6 +55,18 @@ func (t *TaskHandler) TaskList(ctx context.Context, in *task.TaskListInput, out 
 	}
 	return nil
 }
+
+func (t *TaskHandler) GetTaskUnscopedList(ctx context.Context, in *task.TaskListInput, out *task.TaskListOutPut) error {
+	data, err := TaskSvc.UnscopedTaskList(ctx, in)
+	out.TaskListItem = data.TaskListItem
+	out.Total = data.Total
+	if err != nil {
+		log.Logger.Error("查询Task列表失败")
+		return err
+	}
+	return nil
+}
+
 func (t *TaskHandler) TaskDetail(ctx context.Context, in *task.TaskIDInput, out *task.TaskDetailOutPut) error {
 	data, err := TaskSvc.TaskDetail(ctx, in)
 	if err != nil {

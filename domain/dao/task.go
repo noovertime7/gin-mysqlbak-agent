@@ -20,6 +20,7 @@ type TaskInfo struct {
 	Status      int64     `json:"status" gorm:"column:status" description:"开关"`
 	UpdatedAt   time.Time `json:"updated_at" gorm:"column:updated_at" description:"更新时间"`
 	CreatedAt   time.Time `json:"created_at" gorm:"column:created_at" description:"添加时间"`
+	DeletedAt   time.Time `json:"deleted_at" gorm:"column:deleted_at" description:"删除时间"`
 }
 
 func (t *TaskInfo) TableName() string {
@@ -58,6 +59,23 @@ func (t *TaskInfo) PageList(ctx context.Context, tx *gorm.DB, params *task.TaskL
 	offset := (params.PageNo - 1) * params.PageSize
 	query := tx.WithContext(ctx)
 	query = query.Table(t.TableName()).Where("is_deleted=0 and host_id = ?", params.HostID)
+	query.Find(&list).Count(&total)
+	if params.Info != "" {
+		query = query.Where("(db_name like ? or service_name like ? )", "%"+params.Info+"%", "%"+params.Info+"%")
+	}
+	if err := query.Limit(int(params.PageSize)).Offset(int(offset)).Order("id desc").Find(&list).Error; err != nil && err != gorm.ErrRecordNotFound {
+		return nil, 0, err
+	}
+	return list, total, nil
+}
+
+// UnscopedPageList 分页查询所有task，主要用于同步删除状态
+func (t *TaskInfo) UnscopedPageList(ctx context.Context, tx *gorm.DB, params *task.TaskListInput) ([]*TaskInfo, int64, error) {
+	var total int64 = 0
+	var list []*TaskInfo
+	offset := (params.PageNo - 1) * params.PageSize
+	query := tx.WithContext(ctx)
+	query = query.Table(t.TableName()).Where(" host_id = ?", params.HostID)
 	query.Find(&list).Count(&total)
 	if params.Info != "" {
 		query = query.Where("(db_name like ? or service_name like ? )", "%"+params.Info+"%", "%"+params.Info+"%")
