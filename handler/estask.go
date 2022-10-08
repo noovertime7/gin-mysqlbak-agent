@@ -30,6 +30,16 @@ func (e *EsTaskHandler) TaskDelete(ctx context.Context, in *esbak.EsTaskIDInput,
 	out.OK = true
 	return nil
 }
+func (e *EsTaskHandler) TaskRestore(ctx context.Context, in *esbak.EsTaskIDInput, out *esbak.EsOneMessage) error {
+	if err := EsTaskService.TaskRestore(ctx, in.ID); err != nil {
+		out.Message = "还原失败"
+		out.OK = false
+		return err
+	}
+	out.Message = "还原成功"
+	out.OK = true
+	return nil
+}
 func (e *EsTaskHandler) TaskUpdate(ctx context.Context, in *esbak.EsBakTaskUpdateInput, out *esbak.EsOneMessage) error {
 	if err := EsTaskService.TaskUpdate(ctx, in); err != nil {
 		out.Message = "更新失败"

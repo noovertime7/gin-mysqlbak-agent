@@ -7,6 +7,7 @@ import (
 	"backupAgent/domain/pkg/log"
 	"backupAgent/proto/backupAgent/task"
 	"context"
+	"database/sql"
 	"errors"
 	"net"
 	"strings"
@@ -27,7 +28,7 @@ func (t *TaskService) TaskAdd(ctx context.Context, taskInfo *task.TaskAddInput) 
 		BackupCycle: taskInfo.BackupCycle,
 		KeepNumber:  taskInfo.KeepNumber,
 		IsAllDBBak:  taskInfo.IsAllDBBak,
-		IsDelete:    0,
+		IsDelete:    sql.NullInt64{Int64: 0, Valid: true},
 		Status:      0,
 	}
 	tx := database.Gorm.Begin()
@@ -69,7 +70,18 @@ func (t *TaskService) TaskDelete(ctx context.Context, taskinfo *task.TaskIDInput
 	if err != nil {
 		return err
 	}
-	task.IsDelete = 1
+	task.IsDelete = sql.NullInt64{Int64: 1, Valid: true}
+	task.DeletedAt = time.Now()
+	return task.Save(ctx, database.Gorm)
+}
+
+func (t *TaskService) TaskRestore(ctx context.Context, taskinfo *task.TaskIDInput) error {
+	taskDB := &dao.TaskInfo{Id: taskinfo.ID}
+	task, err := taskDB.Find(ctx, database.Gorm, taskDB)
+	if err != nil {
+		return err
+	}
+	task.IsDelete = sql.NullInt64{Int64: 0, Valid: true}
 	task.DeletedAt = time.Now()
 	return task.Save(ctx, database.Gorm)
 }
@@ -144,7 +156,7 @@ func (t *TaskService) TaskList(ctx context.Context, taskinfo *task.TaskListInput
 			CreateAt:    listIterm.CreatedAt.Format("2006年01月02日15:04"),
 			UpdateAt:    listIterm.UpdatedAt.Format("2006年01月02日15:04"),
 			Status:      listIterm.Status,
-			IsDeleted:   listIterm.IsDelete,
+			IsDeleted:   listIterm.IsDelete.Int64,
 			DeletedAt:   listIterm.DeletedAt.Format("2006年01月02日15:04"),
 		}
 		outList = append(outList, outItem)
@@ -181,7 +193,7 @@ func (t *TaskService) UnscopedTaskList(ctx context.Context, taskinfo *task.TaskL
 			CreateAt:    listIterm.CreatedAt.Format("2006年01月02日15:04"),
 			UpdateAt:    listIterm.UpdatedAt.Format("2006年01月02日15:04"),
 			Status:      listIterm.Status,
-			IsDeleted:   listIterm.IsDelete,
+			IsDeleted:   listIterm.IsDelete.Int64,
 			DeletedAt:   listIterm.DeletedAt.Format("2006年01月02日15:04"),
 		}
 		outList = append(outList, outItem)

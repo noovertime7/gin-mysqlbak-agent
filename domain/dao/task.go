@@ -3,24 +3,25 @@ package dao
 import (
 	"backupAgent/proto/backupAgent/task"
 	"context"
+	"database/sql"
 	"errors"
 	"gorm.io/gorm"
 	"time"
 )
 
 type TaskInfo struct {
-	Id          int64     `gorm:"primary_key" description:"自增主键"`
-	HostID      int64     `json:"id" gorm:"column:host_id" description:"主机关系id"`
-	ServiceName string    `json:"service_name" gorm:"column:service_name" description:"服务名"`
-	DBName      string    `json:"db_name" gorm:"column:db_name" description:"备份库名"`
-	BackupCycle string    `json:"backup_cycle" gorm:"column:backup_cycle" description:"备份周期"`
-	KeepNumber  int64     `json:"keep_number"  gorm:"column:keep_number" description:"数据保留周期"`
-	IsAllDBBak  int64     `json:"is_all_dbbak" gorm:"column:is_all_dbbak" description:"是否全库备份"`
-	IsDelete    int64     `json:"is_deleted" gorm:"column:is_deleted" description:"是否删除"`
-	Status      int64     `json:"status" gorm:"column:status" description:"开关"`
-	UpdatedAt   time.Time `json:"updated_at" gorm:"column:updated_at" description:"更新时间"`
-	CreatedAt   time.Time `json:"created_at" gorm:"column:created_at" description:"添加时间"`
-	DeletedAt   time.Time `json:"deleted_at" gorm:"column:deleted_at" description:"删除时间"`
+	Id          int64         `gorm:"primary_key" description:"自增主键"`
+	HostID      int64         `json:"id" gorm:"column:host_id" description:"主机关系id"`
+	ServiceName string        `json:"service_name" gorm:"column:service_name" description:"服务名"`
+	DBName      string        `json:"db_name" gorm:"column:db_name" description:"备份库名"`
+	BackupCycle string        `json:"backup_cycle" gorm:"column:backup_cycle" description:"备份周期"`
+	KeepNumber  int64         `json:"keep_number"  gorm:"column:keep_number" description:"数据保留周期"`
+	IsAllDBBak  int64         `json:"is_all_dbbak" gorm:"column:is_all_dbbak" description:"是否全库备份"`
+	IsDelete    sql.NullInt64 `json:"is_deleted" gorm:"column:is_deleted" description:"是否删除"`
+	Status      int64         `json:"status" gorm:"column:status" description:"开关"`
+	UpdatedAt   time.Time     `json:"updated_at" gorm:"column:updated_at" description:"更新时间"`
+	CreatedAt   time.Time     `json:"created_at" gorm:"column:created_at" description:"添加时间"`
+	DeletedAt   time.Time     `json:"deleted_at" gorm:"column:deleted_at" description:"删除时间"`
 }
 
 func (t *TaskInfo) TableName() string {

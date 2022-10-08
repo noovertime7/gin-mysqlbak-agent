@@ -8,6 +8,7 @@ import (
 	"backupAgent/proto/backupAgent/esbak"
 	"backupAgent/proto/backupAgent/task"
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -24,7 +25,7 @@ func (e *ESTaskService) TaskADD(ctx context.Context, taskInfo *esbak.EsBakTaskAD
 		BackupCycle: taskInfo.BackupCycle,
 		KeepNumber:  taskInfo.KeepNumber,
 		IsAllDBBak:  1,
-		IsDelete:    0,
+		IsDelete:    sql.NullInt64{Int64: 0, Valid: true},
 		Status:      0,
 		UpdatedAt:   time.Now(),
 		CreatedAt:   time.Now(),
@@ -38,7 +39,17 @@ func (e *ESTaskService) TaskDelete(ctx context.Context, id int64) error {
 	if err != nil {
 		return err
 	}
-	esTaskDB.IsDelete = 1
+	esTaskDB.IsDelete = sql.NullInt64{Int64: 1, Valid: true}
+	return esTaskDB.Updates(ctx, database.Gorm)
+}
+
+func (e *ESTaskService) TaskRestore(ctx context.Context, id int64) error {
+	esDB := &dao.TaskInfo{Id: id}
+	esTaskDB, err := esDB.Find(ctx, database.Gorm, esDB)
+	if err != nil {
+		return err
+	}
+	esTaskDB.IsDelete = sql.NullInt64{Int64: 0, Valid: true}
 	return esTaskDB.Updates(ctx, database.Gorm)
 }
 
