@@ -18,7 +18,7 @@ type HostService struct{}
 
 func (h *HostService) HostAdd(ctx context.Context, hostInfo *host.HostAddInput) error {
 	//进行主机检测避免添加无用信息
-	if err := HostPingCheck(hostInfo.UserName, hostInfo.Password, hostInfo.Host, "", pkg.HostType(hostInfo.Type)); err != nil {
+	if err := HostPingCheck(hostInfo.UserName, hostInfo.Password, hostInfo.Host, "", int64(pkg.HostType(hostInfo.Type))); err != nil {
 		log.Logger.Error("agent添加主机检测失败", err)
 		return err
 	}
@@ -52,7 +52,7 @@ func (h *HostService) HostDelete(ctx context.Context, hid int64) error {
 func (h *HostService) HostUpdate(ctx context.Context, hostInfo *host.HostUpdateInput) error {
 	//进行主机检测避免添加无用信息
 	log.Logger.Debug("Host更新入参", hostInfo)
-	if err := HostPingCheck(hostInfo.UserName, hostInfo.Password, hostInfo.Host, "", pkg.HostType(hostInfo.Type)); err != nil {
+	if err := HostPingCheck(hostInfo.UserName, hostInfo.Password, hostInfo.Host, "", int64(pkg.HostType(hostInfo.Type))); err != nil {
 		log.Logger.Error("agent添加主机检测失败", err)
 		return err
 	}
@@ -131,10 +131,10 @@ func (h *HostService) TestHost(ctx context.Context, hid int64) error {
 	if err != nil {
 		return err
 	}
-	return HostPingCheck(Host.User, Host.Password, Host.Host, "", pkg.HostType(Host.Type))
+	return HostPingCheck(Host.User, Host.Password, Host.Host, "", int64(pkg.HostType(Host.Type)))
 }
 
-func HostPingCheck(User, Password, Host, DBName string, hostType pkg.HostType) error {
+func HostPingCheck(User, Password, Host, DBName string, hostType int64) error {
 	switch hostType {
 	case pkg.MysqlHost:
 		if err := MysqlHostCheck(User, Password, Host, DBName); err != nil {

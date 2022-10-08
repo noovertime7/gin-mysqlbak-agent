@@ -34,11 +34,12 @@ func (b *BakHistory) Save(c context.Context, tx *gorm.DB) error {
 
 func (b *BakHistory) Find(c context.Context, tx *gorm.DB, search *BakHistory) (*BakHistory, error) {
 	out := &BakHistory{}
-	err := tx.WithContext(c).Where(search).Find(out).Error
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+	return out, tx.WithContext(c).Where(search).Find(out).Error
+}
+
+func (b *BakHistory) FindList(ctx context.Context, tx *gorm.DB, search *BakHistory) ([]*BakHistory, error) {
+	var out []*BakHistory
+	return out, tx.WithContext(ctx).Where(&search).Find(&out).Error
 }
 
 func (b *BakHistory) PageList(c context.Context, tx *gorm.DB, params *bakhistory.HistoryListInput) ([]BakHistory, int64, error) {

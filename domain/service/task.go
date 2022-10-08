@@ -146,6 +146,10 @@ func (t *TaskService) TaskList(ctx context.Context, taskinfo *task.TaskListInput
 		if err != nil {
 			return nil, err
 		}
+		finNum, err := t.getTaskFinNum(ctx, databseres.Type, listIterm.Id)
+		if err != nil {
+			return nil, err
+		}
 		outItem := &task.TaskListItem{
 			ID:          listIterm.Id,
 			Host:        databseres.Host,
@@ -158,6 +162,7 @@ func (t *TaskService) TaskList(ctx context.Context, taskinfo *task.TaskListInput
 			Status:      listIterm.Status,
 			IsDeleted:   listIterm.IsDelete.Int64,
 			DeletedAt:   listIterm.DeletedAt.Format("2006年01月02日15:04"),
+			FinishNum:   finNum,
 		}
 		outList = append(outList, outItem)
 	}
@@ -167,6 +172,26 @@ func (t *TaskService) TaskList(ctx context.Context, taskinfo *task.TaskListInput
 	}
 	log.Logger.Debug("Service层查询Task列表，出参:", out)
 	return out, nil
+}
+
+func (t *TaskService) getTaskFinNum(ctx context.Context, HostType, taskId int64) (int64, error) {
+	switch HostType {
+	case pkg.MysqlHost:
+		mysqlHistoryDB := &dao.BakHistory{TaskID: taskId}
+		list, err := mysqlHistoryDB.FindList(ctx, database.Gorm, mysqlHistoryDB)
+		if err != nil {
+			return 0, err
+		}
+		return int64(len(list)), nil
+	case pkg.ElasticHost:
+		elasticHistoryDB := &dao.ESHistoryDB{TaskID: taskId}
+		list, err := elasticHistoryDB.FindList(ctx, database.Gorm, elasticHistoryDB)
+		if err != nil {
+			return 0, err
+		}
+		return int64(len(list)), nil
+	}
+	return 0, errors.New("类型不匹配")
 }
 
 func (t *TaskService) UnscopedTaskList(ctx context.Context, taskinfo *task.TaskListInput) (*task.TaskListOutPut, error) {
@@ -183,6 +208,10 @@ func (t *TaskService) UnscopedTaskList(ctx context.Context, taskinfo *task.TaskL
 		if err != nil {
 			return nil, err
 		}
+		finNum, err := t.getTaskFinNum(ctx, databseres.Type, listIterm.Id)
+		if err != nil {
+			return nil, err
+		}
 		outItem := &task.TaskListItem{
 			ID:          listIterm.Id,
 			Host:        databseres.Host,
@@ -195,6 +224,7 @@ func (t *TaskService) UnscopedTaskList(ctx context.Context, taskinfo *task.TaskL
 			Status:      listIterm.Status,
 			IsDeleted:   listIterm.IsDelete.Int64,
 			DeletedAt:   listIterm.DeletedAt.Format("2006年01月02日15:04"),
+			FinishNum:   finNum,
 		}
 		outList = append(outList, outItem)
 	}

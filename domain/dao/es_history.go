@@ -48,6 +48,11 @@ func (e *ESHistoryDB) Find(c context.Context, tx *gorm.DB, search *ESHistoryDB) 
 	return out, nil
 }
 
+func (b *ESHistoryDB) FindList(ctx context.Context, tx *gorm.DB, search *ESHistoryDB) ([]*ESHistoryDB, error) {
+	var out []*ESHistoryDB
+	return out, tx.WithContext(ctx).Where(&search).Find(&out).Error
+}
+
 func (e *ESHistoryDB) Updates(ctx context.Context, tx *gorm.DB) error {
 	if e.Id == 0 {
 		return errors.New("ID 为空")

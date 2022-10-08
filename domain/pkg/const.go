@@ -10,6 +10,6 @@ const (
 type HostType int64
 
 const (
-	MysqlHost   HostType = 1
-	ElasticHost HostType = 2
+	MysqlHost   int64 = 1
+	ElasticHost int64 = 2
 )
