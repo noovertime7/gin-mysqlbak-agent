@@ -8,6 +8,7 @@ import (
 	"backupAgent/proto/backupAgent/bak"
 	"backupAgent/proto/backupAgent/host"
 	"context"
+	"errors"
 )
 
 type BakService struct{}
@@ -18,6 +19,9 @@ func (b *BakService) StartBak(ctx context.Context, bakInfo *bak.StartBakInput) e
 	taskDetail, err := taskDB.TaskDetail(ctx, database.Gorm, taskDB)
 	if err != nil {
 		return err
+	}
+	if taskDetail.Info.IsDelete.Int64 == 1 {
+		return errors.New("任务已被删除,启动失败")
 	}
 	bakHandler, err := core.NewBakHandler(taskDetail)
 	if err != nil {
