@@ -9,16 +9,19 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"net"
-	"strings"
 	"time"
 )
 
 type TaskService struct{}
 
 func (t *TaskService) TaskAdd(ctx context.Context, taskInfo *task.TaskAddInput) error {
+	hostDB := &dao.HostDatabase{Id: taskInfo.HostID}
+	host, err := hostDB.Find(ctx, database.Gorm, hostDB)
+	if err != nil {
+		return err
+	}
 	//添加任务进行数据库检测
-	if err := TaskTest(ctx, taskInfo.HostID, taskInfo.DBName, taskInfo.Endpoint); err != nil {
+	if err := TestHost(ctx, taskInfo.HostID); err != nil {
 		return err
 	}
 	taskDb := &dao.TaskInfo{
@@ -29,12 +32,18 @@ func (t *TaskService) TaskAdd(ctx context.Context, taskInfo *task.TaskAddInput) 
 		KeepNumber:  taskInfo.KeepNumber,
 		IsAllDBBak:  taskInfo.IsAllDBBak,
 		IsDelete:    sql.NullInt64{Int64: 0, Valid: true},
+		Type:        host.Type,
 		Status:      0,
 	}
 	tx := database.Gorm.Begin()
 	if err := taskDb.Save(ctx, tx); err != nil {
 		tx.Rollback()
 		return err
+	}
+	//如果主机类型为elastic，不需要创建后面的数据
+	if hostDB.Type == pkg.ElasticHost {
+		tx.Commit()
+		return nil
 	}
 	ossDB := &dao.OssDatabase{
 		TaskID:     taskDb.Id,
@@ -71,7 +80,7 @@ func (t *TaskService) TaskDelete(ctx context.Context, taskinfo *task.TaskIDInput
 		return err
 	}
 	task.IsDelete = sql.NullInt64{Int64: 1, Valid: true}
-	task.DeletedAt = time.Now()
+	task.DeletedAt = sql.NullTime{Time: time.Now(), Valid: true}
 	return task.Save(ctx, database.Gorm)
 }
 
@@ -91,13 +100,13 @@ func (t *TaskService) TaskRestore(ctx context.Context, taskinfo *task.TaskIDInpu
 		return err
 	}
 	task.IsDelete = sql.NullInt64{Int64: 0, Valid: true}
-	task.DeletedAt = time.Now()
+	task.DeletedAt = sql.NullTime{Time: time.Now(), Valid: true}
 	return task.Save(ctx, database.Gorm)
 }
 
 func (t *TaskService) TaskUpdate(ctx context.Context, taskInfo *task.TaskUpdateInput) error {
 	//添加任务进行数据库检测
-	if err := TaskTest(ctx, taskInfo.HostID, taskInfo.DBName, taskInfo.Endpoint); err != nil {
+	if err := TestHost(ctx, taskInfo.HostID); err != nil {
 		return err
 	}
 	taskDb := &dao.TaskInfo{
@@ -170,7 +179,7 @@ func (t *TaskService) TaskList(ctx context.Context, taskinfo *task.TaskListInput
 			UpdateAt:    listIterm.UpdatedAt.Format("2006年01月02日15:04"),
 			Status:      listIterm.Status,
 			IsDeleted:   listIterm.IsDelete.Int64,
-			DeletedAt:   listIterm.DeletedAt.Format("2006年01月02日15:04"),
+			DeletedAt:   listIterm.DeletedAt.Time.Format("2006年01月02日15:04"),
 			FinishNum:   finNum,
 		}
 		outList = append(outList, outItem)
@@ -232,7 +241,7 @@ func (t *TaskService) UnscopedTaskList(ctx context.Context, taskinfo *task.TaskL
 			UpdateAt:    listIterm.UpdatedAt.Format("2006年01月02日15:04"),
 			Status:      listIterm.Status,
 			IsDeleted:   listIterm.IsDelete.Int64,
-			DeletedAt:   listIterm.DeletedAt.Format("2006年01月02日15:04"),
+			DeletedAt:   listIterm.DeletedAt.Time.Format("2006年01月02日15:04"),
 			FinishNum:   finNum,
 		}
 		outList = append(outList, outItem)
@@ -277,34 +286,34 @@ func (t *TaskService) TaskDetail(ctx context.Context, taskInfo *task.TaskIDInput
 	return out, nil
 }
 
-// TaskTest 在添加任务时，进行数据库连接测试，避免添加无用信息导致备份失败
-func TaskTest(ctx context.Context, hid int64, DBName, endpoint string) error {
-	hostDB := &dao.HostDatabase{Id: hid}
-	host, err := hostDB.Find(ctx, database.Gorm, hostDB)
-	if err != nil {
-		return err
-	}
-	log.Logger.Info("开始任务测试")
-	if err := HostPingCheck(host.User, host.Password, host.Host, DBName, 1); err != nil {
-		return err
-	}
-	if err := EndPointTest(endpoint); err != nil {
-		return err
-	}
-	return nil
-}
-
-// EndPointTest 进行endpoint的一个端口检测
-func EndPointTest(endpoint string) error {
-	if endpoint == "" {
-		return nil
-	}
-	if temp := strings.Split(endpoint, ":"); len(temp) != 2 {
-		return errors.New("您输入的Endpoint地址有误  正确地址: 192.168.1.1:9000")
-	}
-	_, err := net.DialTimeout("tcp", endpoint, 2*time.Second)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+//// TaskTest 在添加任务时，进行数据库连接测试，避免添加无用信息导致备份失败
+//func TaskTest(ctx context.Context, hid int64, DBName, endpoint string) error {
+//	hostDB := &dao.HostDatabase{Id: hid}
+//	host, err := hostDB.Find(ctx, database.Gorm, hostDB)
+//	if err != nil {
+//		return err
+//	}
+//	log.Logger.Info("开始任务测试")
+//	if err := HostPingCheck(host.User, host.Password, host.Host, DBName, 1); err != nil {
+//		return err
+//	}
+//	if err := EndPointTest(endpoint); err != nil {
+//		return err
+//	}
+//	return nil
+//}
+//
+//// EndPointTest 进行endpoint的一个端口检测
+//func EndPointTest(endpoint string) error {
+//	if endpoint == "" {
+//		return nil
+//	}
+//	if temp := strings.Split(endpoint, ":"); len(temp) != 2 {
+//		return errors.New("您输入的Endpoint地址有误  正确地址: 192.168.1.1:9000")
+//	}
+//	_, err := net.DialTimeout("tcp", endpoint, 2*time.Second)
+//	if err != nil {
+//		return err
+//	}
+//	return nil
+//}

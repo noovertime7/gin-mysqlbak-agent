@@ -125,13 +125,13 @@ func (h *HostService) GetHostNames(ctx context.Context, HostType int64) (*host.H
 }
 
 // TestHost 测试主机连通性
-func (h *HostService) TestHost(ctx context.Context, hid int64) error {
+func TestHost(ctx context.Context, hid int64) error {
 	hostDB := &dao.HostDatabase{Id: hid}
 	Host, err := hostDB.Find(ctx, database.Gorm, hostDB)
 	if err != nil {
 		return err
 	}
-	return HostPingCheck(Host.User, Host.Password, Host.Host, "", int64(pkg.HostType(Host.Type)))
+	return HostPingCheck(Host.User, Host.Password, Host.Host, "", Host.Type)
 }
 
 func HostPingCheck(User, Password, Host, DBName string, hostType int64) error {

@@ -11,6 +11,7 @@ alter table es_task add host_id int not null;
 alter table es_bak_history add bak_time datetime null;
 alter table bak_history change filesize file_size bigint null;
 drop table es_task;
+alter table t_taskinfo add type int not null;
 
 
 

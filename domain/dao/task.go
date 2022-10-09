@@ -19,9 +19,10 @@ type TaskInfo struct {
 	IsAllDBBak  int64         `json:"is_all_dbbak" gorm:"column:is_all_dbbak" description:"是否全库备份"`
 	IsDelete    sql.NullInt64 `json:"is_deleted" gorm:"column:is_deleted" description:"是否删除"`
 	Status      int64         `json:"status" gorm:"column:status" description:"开关"`
+	Type        int64         `json:"type" gorm:"column:type" description:"类型"`
 	UpdatedAt   time.Time     `json:"updated_at" gorm:"column:updated_at" description:"更新时间"`
 	CreatedAt   time.Time     `json:"created_at" gorm:"column:created_at" description:"添加时间"`
-	DeletedAt   time.Time     `json:"deleted_at" gorm:"column:deleted_at" description:"删除时间"`
+	DeletedAt   sql.NullTime  `json:"deleted_at" gorm:"column:deleted_at" description:"删除时间"`
 }
 
 func (t *TaskInfo) TableName() string {
@@ -115,7 +116,7 @@ func (t *TaskInfo) TaskDetail(ctx context.Context, tx *gorm.DB, search *TaskInfo
 	if err != nil {
 		return nil, err
 	}
-	hostinfo := &HostDatabase{Id: infores.HostID, Type: 1}
+	hostinfo := &HostDatabase{Id: infores.HostID, Type: search.Type}
 	//查询mysql数据，type =1
 	hostinfores, err := hostinfo.Find(ctx, tx, hostinfo)
 	if err != nil && err != gorm.ErrRecordNotFound {

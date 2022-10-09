@@ -25,7 +25,6 @@ message TaskOneMessage {
 message TaskAddInput {
   int64 HostID = 1;
   string DBName = 2;
-  string ServiceName = 16;
   string BackupCycle = 3;
   int64 KeepNumber = 4 ;
   int64 IsAllDBBak = 5;
@@ -39,6 +38,7 @@ message TaskAddInput {
   string OssSecret = 13;
   string BucketName = 14;
   string Directory = 15;
+  string ServiceName = 16;
 }
 
 

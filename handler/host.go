@@ -55,7 +55,7 @@ func (h *HostHandler) GetHostList(ctx context.Context, in *host.HostListInput, o
 }
 
 func (h *HostHandler) TestHost(ctx context.Context, in *host.HostIDInput, out *host.HostOneMessage) error {
-	if err := s.TestHost(ctx, in.ID); err != nil {
+	if err := service.TestHost(ctx, in.ID); err != nil {
 		return err
 	}
 	out.Message = "主机在线，测试成功"
