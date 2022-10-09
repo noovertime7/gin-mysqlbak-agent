@@ -33,6 +33,17 @@ func (t *TaskHandler) TaskDelete(ctx context.Context, in *task.TaskIDInput, out 
 	out.OK = true
 	return nil
 }
+func (t *TaskHandler) TaskDestroy(ctx context.Context, in *task.TaskIDInput, out *task.TaskOneMessage) error {
+	if err := TaskSvc.TaskDestroy(ctx, in); err != nil {
+		log.Logger.Error("清理task失败")
+		out.Message = "清理失败"
+		out.OK = false
+		return err
+	}
+	out.Message = "清理成功"
+	out.OK = true
+	return nil
+}
 func (t *TaskHandler) RestoreTask(ctx context.Context, in *task.TaskIDInput, out *task.TaskOneMessage) error {
 	if err := TaskSvc.TaskRestore(ctx, in); err != nil {
 		log.Logger.Error("还原task失败")

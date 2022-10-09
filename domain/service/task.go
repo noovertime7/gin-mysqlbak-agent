@@ -75,6 +75,15 @@ func (t *TaskService) TaskDelete(ctx context.Context, taskinfo *task.TaskIDInput
 	return task.Save(ctx, database.Gorm)
 }
 
+func (t *TaskService) TaskDestroy(ctx context.Context, taskinfo *task.TaskIDInput) error {
+	taskDB := &dao.TaskInfo{Id: taskinfo.ID}
+	task, err := taskDB.Find(ctx, database.Gorm, taskDB)
+	if err != nil {
+		return err
+	}
+	return task.Delete(ctx, database.Gorm)
+}
+
 func (t *TaskService) TaskRestore(ctx context.Context, taskinfo *task.TaskIDInput) error {
 	taskDB := &dao.TaskInfo{Id: taskinfo.ID}
 	task, err := taskDB.Find(ctx, database.Gorm, taskDB)

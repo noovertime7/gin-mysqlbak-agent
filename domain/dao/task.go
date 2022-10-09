@@ -32,6 +32,10 @@ func (t *TaskInfo) Save(ctx context.Context, tx *gorm.DB) error {
 	return tx.WithContext(ctx).Save(t).Error
 }
 
+func (t *TaskInfo) Delete(ctx context.Context, tx *gorm.DB) error {
+	return tx.WithContext(ctx).Delete(t).Error
+}
+
 func (t *TaskInfo) Updates(ctx context.Context, tx *gorm.DB) error {
 	return tx.WithContext(ctx).Table(t.TableName()).Updates(t).Error
 }
