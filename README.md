@@ -1,6 +1,6 @@
 # BackupAgent Service
 
-This is the BackupAgent service
+Gin-MysqlBak 客户端，使用go-microv2编写，用于完成各种备份任务
 
 Generated with
 
