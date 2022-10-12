@@ -98,3 +98,13 @@ func (t *TaskHandler) TaskDetail(ctx context.Context, in *task.TaskIDInput, out 
 	*out = *data
 	return nil
 }
+
+func (t *TaskHandler) GetDateNumInfo(ctx context.Context, in *task.DateNumInfoInput, out *task.DateNumInfoOut) error {
+	data, err := TaskSvc.GetDateNumInfo(ctx, in)
+	if err != nil {
+		log.Logger.Error("查询日期数量信息失败")
+		return err
+	}
+	*out = *data
+	return nil
+}

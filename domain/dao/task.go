@@ -59,6 +59,11 @@ func (t *TaskInfo) Find(ctx context.Context, tx *gorm.DB, search *TaskInfo) (*Ta
 	return out, nil
 }
 
+func (t *TaskInfo) FindList(ctx context.Context, tx *gorm.DB, search *TaskInfo) ([]*TaskInfo, error) {
+	var out []*TaskInfo
+	return out, tx.WithContext(ctx).Where(search).Find(&out).Error
+}
+
 func (t *TaskInfo) PageList(ctx context.Context, tx *gorm.DB, params *task.TaskListInput) ([]*TaskInfo, int64, error) {
 	var total int64 = 0
 	var list []*TaskInfo
@@ -138,4 +143,9 @@ func (t *TaskInfo) TaskDetail(ctx context.Context, tx *gorm.DB, search *TaskInfo
 		Oss:  ossres,
 		Ding: dingres,
 	}, nil
+}
+
+func (t *TaskInfo) GetTaskByDate(ctx context.Context, tx *gorm.DB, date string) ([]*TaskInfo, error) {
+	var result []*TaskInfo
+	return result, tx.Debug().WithContext(ctx).Where("created_at like ?", date+"%").Find(&result).Error
 }

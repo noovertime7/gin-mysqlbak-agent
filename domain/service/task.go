@@ -286,6 +286,29 @@ func (t *TaskService) TaskDetail(ctx context.Context, taskInfo *task.TaskIDInput
 	return out, nil
 }
 
+func (t *TaskService) GetDateNumInfo(ctx context.Context, info *task.DateNumInfoInput) (*task.DateNumInfoOut, error) {
+	taskDB := &dao.TaskInfo{}
+	list, err := taskDB.GetTaskByDate(ctx, database.Gorm, info.Date)
+	if err != nil {
+		return nil, err
+	}
+	var historyNum int
+	for _, taskItem := range list {
+		historyDB := &dao.BakHistory{TaskID: taskItem.Id}
+		historys, err := historyDB.FindList(ctx, database.Gorm, historyDB)
+		if err != nil {
+			return nil, err
+		}
+		historyNum = len(historys)
+	}
+	log.Logger.Infof("查询日期%s,查询数据TaskNum:%v", info.Date, int64(len(list)))
+	return &task.DateNumInfoOut{
+		Date:      info.Date,
+		TaskNum:   int64(len(list)),
+		FinishNum: int64(historyNum),
+	}, nil
+}
+
 //// TaskTest 在添加任务时，进行数据库连接测试，避免添加无用信息导致备份失败
 //func TaskTest(ctx context.Context, hid int64, DBName, endpoint string) error {
 //	hostDB := &dao.HostDatabase{Id: hid}
