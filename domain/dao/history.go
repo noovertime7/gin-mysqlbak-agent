@@ -42,6 +42,11 @@ func (b *BakHistory) FindList(ctx context.Context, tx *gorm.DB, search *BakHisto
 	return out, tx.WithContext(ctx).Where(&search).Find(&out).Error
 }
 
+func (b *BakHistory) FindListBeforDateTask(ctx context.Context, tx *gorm.DB, date string) {
+	var out []*BakHistory
+	tx.WithContext(ctx).Raw("SELECT * FROM bak_history where task_id = ? and bak_time < ?", b.TaskID, date).Find(&out)
+}
+
 func (b *BakHistory) PageList(c context.Context, tx *gorm.DB, params *bakhistory.HistoryListInput) ([]BakHistory, int64, error) {
 	var total int64 = 0
 	var list []BakHistory

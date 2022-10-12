@@ -73,3 +73,8 @@ func StatusConversion(a int64) string {
 	}
 	return "unknown"
 }
+
+// GetDateByKeepNumber 根据保留周期生成日期
+func GetDateByKeepNumber(k int) string {
+	return time.Now().AddDate(0, 0, -k).Format("2006-01-02")
+}

@@ -27,6 +27,7 @@ func InitResourceAndStart() error {
 	pkg.PrintLogo()
 	//初始化数据库
 	database.InitDB()
+	Clean()
 	//注册服务
 	go LoopRegister()
 	//启动状态为1的任务
