@@ -4,24 +4,27 @@ import (
 	"backupAgent/domain/pkg"
 	"backupAgent/proto/backupAgent/bakhistory"
 	"context"
+	"database/sql"
 	"fmt"
 	"gorm.io/gorm"
 	"time"
 )
 
 type BakHistory struct {
-	Id         int64     `gorm:"primary_key" description:"自增主键"`
-	TaskID     int64     `gorm:"column:task_id" description:"任务id"`
-	Host       string    `gorm:"column:host" description:"主机"`
-	DBName     string    `gorm:"column:db_name" description:"库名"`
-	OssStatus  int64     `gorm:"column:oss_status"  description:"钉钉发送状态"`
-	DingStatus int64     `gorm:"column:ding_status"  description:"OSS保存状态"`
-	BakStatus  int64     `gorm:"column:bak_status" description:"备份状态"`
-	Msg        string    `gorm:"column:message" description:"消息"`
-	FileSize   int64     `gorm:"column:file_size" description:"文件大小"`
-	FileName   string    `gorm:"column:filename" description:"文件名"`
-	BakTime    time.Time `gorm:"column:bak_time" description:"备份时间"`
-	IsDeleted  int64     `json:"is_deleted" gorm:"column:is_deleted"`
+	Id         int64        `gorm:"primary_key" description:"自增主键"`
+	TaskID     int64        `gorm:"column:task_id" description:"任务id"`
+	Host       string       `gorm:"column:host" description:"主机"`
+	DBName     string       `gorm:"column:db_name" description:"库名"`
+	OssStatus  int64        `gorm:"column:oss_status"  description:"钉钉发送状态"`
+	DingStatus int64        `gorm:"column:ding_status"  description:"OSS保存状态"`
+	BakStatus  int64        `gorm:"column:bak_status" description:"备份状态"`
+	Msg        string       `gorm:"column:message" description:"消息"`
+	FileSize   int64        `gorm:"column:file_size" description:"文件大小"`
+	FileName   string       `gorm:"column:filename" description:"文件名"`
+	BakTime    time.Time    `gorm:"column:bak_time" description:"备份时间"`
+	IsDeleted  int64        `json:"is_deleted" gorm:"column:is_deleted"`
+	IsCleaned  int          `gorm:"column:is_cleaned;type:int(11);comment:是否被清理;NOT NULL" json:"is_cleand"`
+	CleanedAt  sql.NullTime `gorm:"column:cleaned_at;type:datetime" json:"cleaned_at"`
 }
 
 func (b *BakHistory) TableName() string {
@@ -30,6 +33,10 @@ func (b *BakHistory) TableName() string {
 
 func (b *BakHistory) Save(c context.Context, tx *gorm.DB) error {
 	return tx.WithContext(c).Save(b).Error
+}
+
+func (b *BakHistory) Updates(ctx context.Context, tx *gorm.DB) error {
+	return tx.WithContext(ctx).Updates(b).Error
 }
 
 func (b *BakHistory) Find(c context.Context, tx *gorm.DB, search *BakHistory) (*BakHistory, error) {
@@ -42,9 +49,10 @@ func (b *BakHistory) FindList(ctx context.Context, tx *gorm.DB, search *BakHisto
 	return out, tx.WithContext(ctx).Where(&search).Find(&out).Error
 }
 
-func (b *BakHistory) FindListBeforDateTask(ctx context.Context, tx *gorm.DB, date string) {
+// FindListBeforDateTask 查询过期历史记录
+func (b *BakHistory) FindListBeforDateTask(ctx context.Context, tx *gorm.DB, date string) ([]*BakHistory, error) {
 	var out []*BakHistory
-	tx.WithContext(ctx).Raw("SELECT * FROM bak_history where task_id = ? and bak_time < ?", b.TaskID, date).Find(&out)
+	return out, tx.WithContext(ctx).Raw("SELECT * FROM bak_history where task_id = ? and bak_time < ? and bak_status =1 and is_cleaned != 1", b.TaskID, date).Find(&out).Error
 }
 
 func (b *BakHistory) PageList(c context.Context, tx *gorm.DB, params *bakhistory.HistoryListInput) ([]BakHistory, int64, error) {

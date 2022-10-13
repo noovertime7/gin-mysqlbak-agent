@@ -43,5 +43,6 @@ func (h *HistoryHandler) GetHistoryNumInfo(ctx context.Context, e *bakhistory.Em
 	out.WeekNums = data.GetWeekNums()
 	out.AllFileSize = data.GetAllFileSize()
 	out.AllNums = data.GetAllNums()
+	out.FailNum = data.FailNum
 	return nil
 }

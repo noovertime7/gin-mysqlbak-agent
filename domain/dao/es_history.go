@@ -29,6 +29,8 @@ type ESHistoryDB struct {
 	Message           string        `json:"message"  gorm:"column:message"  comment:"备注"`
 	IsDeleted         int64         `json:"is_deleted" gorm:"column:is_deleted;type:int(12);default:0"  comment:"软删除标记"`
 	Status            sql.NullInt64 `json:"status"  gorm:"column:status"  comment:"快照状态 1成功，0失败"`
+	IsCleaned         int           `gorm:"column:is_cleaned;type:int(11);comment:是否被清理;NOT NULL" json:"is_cleand"`
+	CleanedAt         sql.NullTime  `gorm:"column:cleaned_at;type:datetime" json:"cleaned_at"`
 }
 
 func (e *ESHistoryDB) TableName() string {
@@ -48,9 +50,15 @@ func (e *ESHistoryDB) Find(c context.Context, tx *gorm.DB, search *ESHistoryDB) 
 	return out, nil
 }
 
-func (b *ESHistoryDB) FindList(ctx context.Context, tx *gorm.DB, search *ESHistoryDB) ([]*ESHistoryDB, error) {
+func (e *ESHistoryDB) FindList(ctx context.Context, tx *gorm.DB, search *ESHistoryDB) ([]*ESHistoryDB, error) {
 	var out []*ESHistoryDB
 	return out, tx.WithContext(ctx).Where(&search).Find(&out).Error
+}
+
+// FindListBeforDateTask 查询过期历史记录
+func (e *ESHistoryDB) FindListBeforDateTask(ctx context.Context, tx *gorm.DB, date string) ([]*ESHistoryDB, error) {
+	var out []*ESHistoryDB
+	return out, tx.WithContext(ctx).Raw("SELECT * FROM es_bak_history where task_id = ? and bak_time < ? and status =1 and is_cleaned != 1", e.TaskID, date).Find(&out).Error
 }
 
 func (e *ESHistoryDB) Updates(ctx context.Context, tx *gorm.DB) error {

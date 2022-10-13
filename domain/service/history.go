@@ -36,6 +36,7 @@ func (h *HistoryService) GetHistoryList(ctx context.Context, historyInfo *bakhis
 			DBName:     listIterm.DBName,
 			DingStatus: listIterm.DingStatus,
 			OSSStatus:  listIterm.OssStatus,
+			Status:     listIterm.BakStatus,
 			Message:    listIterm.Msg,
 			FileSize:   strconv.Itoa(int(listIterm.FileSize)),
 			FileName:   listIterm.FileName,
@@ -72,7 +73,11 @@ func (h *HistoryService) GetHistoryNumInfo(ctx context.Context) (*bakhistory.His
 	}
 	//获取文件大小
 	var allSize int
+	var failNum int64
 	for _, h := range data.HistoryListOutItem {
+		if h.Status != 1 {
+			failNum++
+		}
 		iSize, err := strconv.Atoi(h.FileSize)
 		if err != nil {
 			return nil, err
@@ -90,5 +95,6 @@ func (h *HistoryService) GetHistoryNumInfo(ctx context.Context) (*bakhistory.His
 		WeekNums:    int64(len(dataList)),
 		AllNums:     data.Total,
 		AllFileSize: mbAllSize,
+		FailNum:     failNum,
 	}, err
 }
