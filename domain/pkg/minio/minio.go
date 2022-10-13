@@ -2,61 +2,67 @@ package minio
 
 import (
 	"context"
+	"github.com/micro/go-micro/v2/logger"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"log"
 	"path/filepath"
 )
 
-type client struct {
+type Client struct {
 	client         *minio.Client
 	bucketName     string
 	targetFilePath string
 	Dir            string
 }
 
-func NewClient(endpoint, accessKeyID, secretAccessKey, bucketName, dir, filepath string) *client {
+func NewClient(endpoint, accessKeyID, secretAccessKey, bucketName, dir, filepath string) (*Client, error) {
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
 		Secure: false,
 	})
 	if err != nil {
-		log.Fatalln(err)
-		return nil
+		return nil, err
 	}
-	return &client{
+	return &Client{
 		client:         minioClient,
 		bucketName:     bucketName, //目标bucket
 		targetFilePath: filepath,
 		Dir:            dir,
-	}
+	}, nil
 }
 
-//checkBucket 检测目标bucket是否存在，不存在就创建一个
-func (c *client) checkBucket() {
-	isExists, err := c.client.BucketExists(context.Background(), c.bucketName)
-	if err != nil {
-		log.Println("check bucket exist error ")
-		return
-	}
-	if !isExists {
+func (c *Client) isExists() bool {
+	ok, _ := c.client.BucketExists(context.Background(), c.bucketName)
+	return ok
+}
+
+// checkBucket 检测目标bucket是否存在，不存在就创建一个
+func (c *Client) checkBucket() {
+	if !c.isExists() {
 		err2 := c.client.MakeBucket(context.Background(), c.bucketName, minio.MakeBucketOptions{Region: "cn-north-1", ObjectLocking: false})
 		if err2 != nil {
-			log.Println("MakeBucket error ", err2)
+			logger.Error("MakeBucket error ", err2)
 			return
 		}
-		log.Printf("minio创建bucket %s\n", c.bucketName)
+		logger.Info("minio创建bucket %s\n", c.bucketName)
 	}
 }
 
-func (c *client) UploadFile() error {
+func (c *Client) UploadFile() error {
 	c.checkBucket()
 	_, filename := filepath.Split(c.targetFilePath)
 	dirname := "/" + c.Dir + "/" + filename
 	_, err := c.client.FPutObject(context.Background(), c.bucketName, dirname, c.targetFilePath, minio.PutObjectOptions{})
 	if err != nil {
-		log.Println("上传失败 ", err)
+		logger.Error("上传失败 ", err)
 		return err
 	}
 	return nil
+}
+
+func (c *Client) Remove() error {
+	_, filename := filepath.Split(c.targetFilePath)
+	path := "/" + c.Dir + "/" + filename
+	logger.Infof("minio handler delete file %s", path)
+	return c.client.RemoveObject(context.Background(), c.bucketName, path, minio.RemoveObjectOptions{GovernanceBypass: true})
 }

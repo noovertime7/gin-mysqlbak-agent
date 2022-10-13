@@ -2,35 +2,62 @@ package alioss
 
 import (
 	"github.com/noovertime7/mysqlbak/pkg/log"
+	"path/filepath"
 	"strings"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 )
 
-func AliOssUploadFile(filename, Endpoint, Accesskey, Secretkey, BucketName, Directory string) error {
-	// 创建OSSClient实例。
-	// yourEndpoint填写Bucket对应的Endpoint，以华东1（杭州）为例，填写为https://oss-cn-hangzhou.aliyuncs.com。其它Region请按实际情况填写。
-	// 阿里云账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM用户进行API访问或日常运维，请登录RAM控制台创建RAM用户。
-
-	client, err := oss.New(Endpoint, Accesskey, Secretkey)
+func NewClient(filename, Endpoint, AccessKey, SecretKey, BucketName, Directory string) (*AliOss, error) {
+	client, err := oss.New(Endpoint, AccessKey, SecretKey)
 	if err != nil {
-		log.Logger.Error("Error:", err)
+		log.Logger.Error("Ali OSS Error:", err)
+		return nil, err
+	}
+	return &AliOss{
+		client:     client,
+		fileName:   filename,
+		BucketName: BucketName,
+		Dir:        Directory,
+	}, nil
+}
+
+type AliOss struct {
+	client     *oss.Client
+	fileName   string
+	BucketName string
+	Dir        string
+}
+
+func (a *AliOss) AliOssUploadFile() error {
+	if !a.isExists() {
+		if err := a.createBucket(); err != nil {
+			return err
+		}
+	}
+	bucket, err := a.client.Bucket(a.BucketName)
+	if err != nil {
 		return err
 	}
+	file := strings.Split(a.fileName, "/")[len(strings.Split(a.fileName, "/"))-1] //需要处理一下拿到文件名
+	return bucket.PutObjectFromFile(a.Dir+file, a.fileName)
+}
 
-	// 填写存储空间名称，例如examplebucket。
-	bucket, err := client.Bucket(BucketName)
+func (a *AliOss) Remove() error {
+	bucket, err := a.client.Bucket(a.BucketName)
 	if err != nil {
-		log.Logger.Error("Error:", err)
 		return err
 	}
+	filename, _ := filepath.Split(a.fileName)
+	path := "/" + a.Dir + "/" + filename
+	return bucket.DeleteObject(path)
+}
 
-	// 依次填写Object的完整路径（例如exampledir/exampleobject.txt）和本地文件的完整路径（例如D:\\localpath\\examplefile.txt）。
-	file := strings.Split(filename, "/")[len(strings.Split(filename, "/"))-1] //需要处理一下拿到文件名
-	err = bucket.PutObjectFromFile(Directory+file, filename)
-	if err != nil {
-		log.Logger.Error("Error:", err)
-		return err
-	}
-	return nil
+func (a *AliOss) isExists() bool {
+	ok, _ := a.client.IsBucketExist(a.BucketName)
+	return ok
+}
+
+func (a *AliOss) createBucket() error {
+	return a.client.CreateBucket(a.BucketName)
 }

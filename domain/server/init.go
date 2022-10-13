@@ -27,7 +27,8 @@ func InitResourceAndStart() error {
 	pkg.PrintLogo()
 	//初始化数据库
 	database.InitDB()
-	Clean()
+	//启动数据清理定时任务，检测是否需要清理
+	go startClean()
 	//注册服务
 	go LoopRegister()
 	//启动状态为1的任务
@@ -100,5 +101,15 @@ func LoopRegister() {
 		}
 		time.Sleep(time.Duration(registrationCycle) * time.Minute)
 		log.Logger.Info(data)
+	}
+}
+
+func startClean() {
+	ticker := time.NewTicker(10 * time.Second)
+	for {
+		<-ticker.C
+		if err := Clean(); err != nil {
+			log.Logger.Error("数据清理定时任务出现错误:", err)
+		}
 	}
 }

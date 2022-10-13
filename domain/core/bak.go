@@ -218,9 +218,15 @@ func AfterBak(b *Handler) {
 		Directory := b.OssConfig.Directory
 		switch b.OssConfig.OssType {
 		case 0:
-			log.Logger.Debug("OSSType为0保存至minio中")
+			log.Logger.Debug("OSSType为0保存至阿里云OSS中")
 			log.Logger.Infof("%s:%s开始保存至阿里云对象存储OSS", b.Host, b.DbName)
-			if err := alioss.AliOssUploadFile(FileName, Endpoint, Accesskey, Secretkey, BucketName, Directory); err != nil {
+			ossClient, err := alioss.NewClient(FileName, Endpoint, Accesskey, Secretkey, BucketName, Directory)
+			if err != nil {
+				b.OssStatus = 0
+				log.Logger.Errorf("%s:%s创建阿里云对象存储OSS客户端失败:%v", b.Host, b.DbName, err.Error())
+				return
+			}
+			if err := ossClient.AliOssUploadFile(); err != nil {
 				log.Logger.Errorf("%s:%s保存阿里云对象存储OSS失败:%v", b.Host, b.DbName, err.Error())
 				b.OssStatus = 0
 				return
@@ -229,7 +235,12 @@ func AfterBak(b *Handler) {
 			b.OssStatus = 1
 		case 1:
 			log.Logger.Debug("OSSType为1保存至minio中")
-			client := minio.NewClient(Endpoint, Accesskey, Secretkey, BucketName, Directory, b.FileName)
+			client, err := minio.NewClient(Endpoint, Accesskey, Secretkey, BucketName, Directory, b.FileName)
+			if err != nil {
+				log.Logger.Errorf("%s:%s创建minio客户端失败:%v", b.Host, b.DbName, err.Error())
+				b.OssStatus = 0
+				return
+			}
 			if err := client.UploadFile(); err != nil {
 				log.Logger.Errorf("%s:%s保存Minio存储失败:%v", b.Host, b.DbName, err.Error())
 				b.OssStatus = 0
