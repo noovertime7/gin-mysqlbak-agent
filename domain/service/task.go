@@ -292,20 +292,19 @@ func (t *TaskService) GetDateNumInfo(ctx context.Context, info *task.DateNumInfo
 	if err != nil {
 		return nil, err
 	}
-	var historyNum int
-	for _, taskItem := range list {
-		historyDB := &dao.BakHistory{TaskID: taskItem.Id}
-		historys, err := historyDB.FindList(ctx, database.Gorm, historyDB)
-		if err != nil {
-			return nil, err
-		}
-		historyNum = len(historys)
+	mysqlHistoryDb := &dao.BakHistory{}
+	mysqlList, err := mysqlHistoryDb.FindHistoryByDate(ctx, database.Gorm, info.Date)
+	if err != nil {
+		return nil, err
 	}
-	log.Logger.Infof("查询日期%s,查询数据TaskNum:%v", info.Date, int64(len(list)))
+	elasticDB := &dao.ESHistoryDB{}
+	esList, err := elasticDB.FindHistoryByDate(ctx, database.Gorm, info.Date)
+	allFinishNums := len(mysqlList) + len(esList)
+	log.Logger.Infof("查询日期%s,查询数据任务数量%d,Mysql历史记录:%d,Elastic历史记录%d", info.Date, len(list), len(mysqlList), len(esList))
 	return &task.DateNumInfoOut{
 		Date:      info.Date,
 		TaskNum:   int64(len(list)),
-		FinishNum: int64(historyNum),
+		FinishNum: int64(allFinishNums),
 	}, nil
 }
 

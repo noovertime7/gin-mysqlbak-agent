@@ -118,3 +118,8 @@ func (b *BakHistory) FindByDate(ctx context.Context, tx *gorm.DB, num int) ([]Ba
 	var out []BakHistory
 	return out, tx.WithContext(ctx).Raw("SELECT * FROM bak_history WHERE is_deleted !=1 and date_sub(curdate(), interval ? day) <= date(bak_time);", num).Scan(&out).Error
 }
+
+func (b *BakHistory) FindHistoryByDate(ctx context.Context, tx *gorm.DB, date string) ([]*BakHistory, error) {
+	var result []*BakHistory
+	return result, tx.Debug().WithContext(ctx).Where("bak_time like ?", date+"%").Find(&result).Error
+}

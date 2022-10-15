@@ -147,5 +147,5 @@ func (t *TaskInfo) TaskDetail(ctx context.Context, tx *gorm.DB, search *TaskInfo
 
 func (t *TaskInfo) GetTaskByDate(ctx context.Context, tx *gorm.DB, date string) ([]*TaskInfo, error) {
 	var result []*TaskInfo
-	return result, tx.Debug().WithContext(ctx).Where("created_at like ?", date+"%").Find(&result).Error
+	return result, tx.Debug().WithContext(ctx).Where("created_at < ? and is_deleted != 1", date+" 23:59:59").Find(&result).Error
 }

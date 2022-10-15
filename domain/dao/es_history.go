@@ -55,6 +55,12 @@ func (e *ESHistoryDB) FindList(ctx context.Context, tx *gorm.DB, search *ESHisto
 	return out, tx.WithContext(ctx).Where(&search).Find(&out).Error
 }
 
+// FindHistoryByDate 通过日期查询备份数量
+func (e *ESHistoryDB) FindHistoryByDate(ctx context.Context, tx *gorm.DB, date string) ([]*ESHistoryDB, error) {
+	var result []*ESHistoryDB
+	return result, tx.Debug().WithContext(ctx).Where("bak_time like ?", date+"%").Find(&result).Error
+}
+
 // FindListBeforDateTask 查询过期历史记录
 func (e *ESHistoryDB) FindListBeforDateTask(ctx context.Context, tx *gorm.DB, date string) ([]*ESHistoryDB, error) {
 	var out []*ESHistoryDB
