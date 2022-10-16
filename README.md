@@ -2,6 +2,8 @@
 
 Gin-MysqlBak 客户端，使用go-micro v2编写，用于完成各种备份任务
 
+Gin-MysqlBak地址： https://github.com/noovertime7/gin-mysqlbak
+
 版本： v3.0.0
 
 ## Get Start
