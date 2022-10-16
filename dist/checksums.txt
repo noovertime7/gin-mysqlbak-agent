@@ -1,0 +1,4 @@
+85264301871d8ebe7e383d4bad01c6edb82f227cf043bf50574e8e4f22e13bd9  gin-mysqlbak-agent_0.0.1-next_linux_amd64.tar.gz
+a147019525e0887fb64e41654f7870b4279c1636637bc15841d1ea005c2bb2be  gin-mysqlbak-agent_0.0.1-next_linux_arm64.tar.gz
+bca4cabdc5677d2ab49b903a8cef8e5f2ed534b25e6b05651c0b8b6c85b7081f  gin-mysqlbak-agent_0.0.1-next_windows_arm64.tar.gz
+d2d7239be1f3b61d320fe683bf42dc12d15e0dc37b6f3f8e8bb0cb9bbc6e3ca4  gin-mysqlbak-agent_0.0.1-next_windows_amd64.tar.gz
