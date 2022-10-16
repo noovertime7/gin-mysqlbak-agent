@@ -1,51 +1,52 @@
-# BackupAgent 
+English | [简体中文](./README_zh_cn.md)
+# BackupAgent
 
-Gin-MysqlBak 客户端，使用go-micro v2编写，用于完成各种备份任务
+Gin-MysqlBak client, written in go-micro v2, for various backup tasks
 
-版本： v3.0.0
+Version: v3.0.0
 
 ## Get Start
 
-克隆仓库
+Clone the repository
 
 ```shell
 git clone https://github.com/noovertime7/gin-mysqlbak-agent.git
 ```
 
-开始之前，请先将配置文件中的autoInit置为true，以便自动初始化表，但仍需要手动创建数据库
+Before you start, set autoInit to true in the configuration file to automatically initialize the tables, but you still need to create the database manually
 
 ```sql
 create datebase `gin-mysqlbak-agent`;
 ```
-### 二进制部署
+### Binary deployment
 
-选择合适环境的安装包，或者自行编译
+Choose the right installation package for your environment, or compile it yourself
 
 https://github.com/noovertime7/gin-mysqlbak-agent/releases/tag/v3.0.0
 
 
-### docker容器部署
-开始之前，请先创建config.ini配置文件，并确保数据库已经手动创建
+### docker container deployment
+Before you start, create the config.ini configuration file and make sure the database has been created manually
 
 ```shell
-docker run -itd --name gin-mysql-agent  \
+docker run -itd --name gin-mysql-agent \
 --net=host --restart=always \
 -v /root/config.ini:/app/domain/config/config.ini \
 -v /root/bakfile:/app/bakfile \
 chenteng/gin-mysqlbak-agent:3.0.0
 ```
 
-### kubernetes部署
+### kubernetes deployment
 
-开始之前，请先修改agent-conf.yaml配置文件，并确保数据库已经手动创建
+Before you start, please modify the agent-conf.yaml configuration file and make sure the database has been created manually
 
-PS:如果对端口有个性化需求，请修改agent-deploy.yaml
+PS: If you have individual requirements for ports, please modify agent-deploy.yaml
 
 ```shell
-## 创建命名空间
+## Create namespace
 kubectl create ns mysqlbak
-## 创建配置文件
+## Create configuration file
 kubectl apply -f agent-conf.yaml
-## 创建deployment & service
+## Create deployment & service
 kubectl apply -f agent-deploy.yaml
 ```
