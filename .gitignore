@@ -4,3 +4,5 @@ backupAgent-service
 bakfile
 
 test
+
+dist/
