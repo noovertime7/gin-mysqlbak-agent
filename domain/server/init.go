@@ -105,7 +105,8 @@ func LoopRegister() {
 }
 
 func startClean() {
-	ticker := time.NewTicker(10 * time.Second)
+	cycle := config.GetIntConf("base", "cleanCycle")
+	ticker := time.NewTicker(time.Duration(cycle) * time.Minute)
 	for {
 		<-ticker.C
 		if err := Clean(); err != nil {
