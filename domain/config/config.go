@@ -1,22 +1,28 @@
 package config
 
 import (
+	"backupAgent/domain/pkg/log"
+	"flag"
 	"gopkg.in/ini.v1"
-	"log"
 	"os"
 )
 
 var Config *ini.File
 
+var configFile string
+
 func init() {
+	flag.StringVar(&configFile, "config", "/domain/config/config.ini", "set config file")
+	flag.Parse()
 	if Config != nil {
 		return
 	}
 	path, err := os.Getwd()
-	cfg, err := ini.Load(path + "/domain/config/config.ini")
+	cfg, err := ini.Load(path + configFile)
 	if err != nil {
-		log.Fatal("Fail to read file: ", err)
+		log.Logger.Fatal("加载配置文件失败,Fail to read file: ", err)
 	}
+	log.Logger.Infof("加载配置文件成功，当前配置文件路径:%s", path+configFile)
 	Config = cfg
 }
 
