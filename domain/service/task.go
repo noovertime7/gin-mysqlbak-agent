@@ -24,6 +24,13 @@ func (t *TaskService) TaskAdd(ctx context.Context, taskInfo *task.TaskAddInput) 
 	if err := TestHost(ctx, taskInfo.HostID); err != nil {
 		return err
 	}
+	ok, err := t.isExists(ctx, taskInfo)
+	if err != nil {
+		return err
+	}
+	if ok {
+		return errors.New("当前数据库已创建任务")
+	}
 	taskDb := &dao.TaskInfo{
 		HostID:      taskInfo.HostID,
 		ServiceName: taskInfo.ServiceName,
@@ -71,6 +78,15 @@ func (t *TaskService) TaskAdd(ctx context.Context, taskInfo *task.TaskAddInput) 
 	}
 	tx.Commit()
 	return nil
+}
+
+func (t *TaskService) isExists(ctx context.Context, taskInfo *task.TaskAddInput) (bool, error) {
+	taskDB := &dao.TaskInfo{DBName: taskInfo.DBName}
+	ts, err := taskDB.Find(ctx, database.Gorm, taskDB)
+	if err != nil {
+		return false, err
+	}
+	return ts.Id != 0, nil
 }
 
 func (t *TaskService) TaskDelete(ctx context.Context, taskinfo *task.TaskIDInput) error {
