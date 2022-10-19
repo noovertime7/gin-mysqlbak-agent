@@ -1,6 +1,7 @@
 package service
 
 import (
+	"backupAgent/domain/config"
 	"backupAgent/domain/dao"
 	"backupAgent/domain/pkg"
 	"backupAgent/domain/pkg/database"
@@ -9,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -322,6 +324,63 @@ func (t *TaskService) GetDateNumInfo(ctx context.Context, info *task.DateNumInfo
 		TaskNum:   int64(len(list)),
 		FinishNum: int64(allFinishNums),
 	}, nil
+}
+
+func (t *TaskService) TaskAutoCreate(ctx context.Context, info *task.TaskAutoCreateInPut) error {
+	hostDB := &dao.HostDatabase{Id: info.HostID}
+	host, err := hostDB.Find(ctx, database.Gorm, hostDB)
+	if err != nil {
+		return err
+	}
+	temp := strings.Split(host.Host, ":")
+	hostAddr := temp[0]
+	hostPort := temp[1]
+	mysqlConInfo := database.NewMysqlConInfo(
+		hostAddr,
+		host.User,
+		host.Password,
+		hostPort,
+		"mysql",
+	)
+	db, err := database.CreateDB(mysqlConInfo)
+	if err != nil {
+		return err
+	}
+	var databaseList []string
+	var tempDatabaseList []string
+	if err := db.Raw("show databases").Scan(&tempDatabaseList).Error; err != nil {
+		return err
+	}
+	//处理数据，避免对默认库创建任务
+	for _, dbName := range tempDatabaseList {
+		if dbName != "mysql" && dbName != "sys" && dbName != "information_schema" && dbName != "performance_schema" {
+			databaseList = append(databaseList, dbName)
+		}
+	}
+	for _, dbName := range databaseList {
+		input := &task.TaskAddInput{
+			HostID:          info.HostID,
+			DBName:          dbName,
+			BackupCycle:     info.BackupCycle,
+			KeepNumber:      info.KeepNumber,
+			IsAllDBBak:      info.IsAllDBBak,
+			IsDingSend:      info.IsDingSend,
+			DingAccessToken: info.DingAccessToken,
+			DingSecret:      info.DingSecret,
+			OssType:         info.OssType,
+			IsOssSave:       info.IsOssSave,
+			Endpoint:        info.Endpoint,
+			OssAccess:       info.OssAccess,
+			OssSecret:       info.OssSecret,
+			BucketName:      info.BucketName,
+			Directory:       info.Directory,
+			ServiceName:     config.GetStringConf("base", "serviceName"),
+		}
+		if err := t.TaskAdd(ctx, input); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 //// TaskTest 在添加任务时，进行数据库连接测试，避免添加无用信息导致备份失败

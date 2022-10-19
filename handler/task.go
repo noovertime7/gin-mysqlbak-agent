@@ -22,6 +22,17 @@ func (t *TaskHandler) TaskAdd(ctx context.Context, in *task.TaskAddInput, out *t
 	out.OK = true
 	return nil
 }
+func (t *TaskHandler) TaskAutoCreate(ctx context.Context, in *task.TaskAutoCreateInPut, out *task.TaskOneMessage) error {
+	if err := TaskSvc.TaskAutoCreate(ctx, in); err != nil {
+		log.Logger.Error("自动创建任务成功task失败")
+		out.Message = "自动创建任务成功失败"
+		out.OK = false
+		return err
+	}
+	out.Message = "自动创建任务成功"
+	out.OK = true
+	return nil
+}
 func (t *TaskHandler) TaskDelete(ctx context.Context, in *task.TaskIDInput, out *task.TaskOneMessage) error {
 	if err := TaskSvc.TaskDelete(ctx, in); err != nil {
 		log.Logger.Error("删除task失败")
