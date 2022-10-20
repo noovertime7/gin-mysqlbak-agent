@@ -1,4 +1,4 @@
-        # BackupAgent 
+# BackupAgent 
 
 Gin-MysqlBak 客户端，使用go-micro v2编写，用于完成各种备份任务
 
@@ -21,7 +21,7 @@ create datebase `gin-mysqlbak-agent`;
 
 选择合适环境的安装包，或者自行编译
 
-https://github.com/noovertime7/gin-mysqlbak-agent/releases/tag/v3.0.0
+https://github.com/noovertime7/gin-mysqlbak-agent/releases
 
 
 ### docker容器部署
@@ -32,7 +32,7 @@ docker run -itd --name gin-mysql-agent  \
 --net=host --restart=always \
 -v /root/config.ini:/app/domain/config/config.ini \
 -v /root/bakfile:/app/bakfile \
-chenteng/gin-mysqlbak-agent:3.0.0
+chenteng/gin-mysqlbak-agent:3.0.2
 ```
 
 ### kubernetes部署
