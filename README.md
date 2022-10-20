@@ -22,7 +22,7 @@ create datebase `gin-mysqlbak-agent`;
 
 Choose the right installation package for your environment, or compile it yourself
 
-https://github.com/noovertime7/gin-mysqlbak-agent/releases/tag/v3.0.2
+https://github.com/noovertime7/gin-mysqlbak-agent/releases
 
 
 ### docker container deployment
