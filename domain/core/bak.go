@@ -280,28 +280,26 @@ func AfterBak(b *Handler) {
 		if onFailSend {
 			if b.BakStatus != 1 {
 				if err := dingSend(b); err != nil {
-					log.Logger.Error("钉钉发送失败")
+					log.Logger.Error("钉钉通知发送失败", err)
 					return
 				}
-				log.Logger.Info("钉钉发送成功")
+				log.Logger.Info("钉钉通知发送成功")
 			}
 			log.Logger.Info("钉钉onFailSend开关开启,数据备份成功，仅在失败状态下发送钉钉消息")
 		} else {
 			if err := dingSend(b); err != nil {
-				log.Logger.Error("钉钉发送失败")
+				log.Logger.Error("钉钉通知发送失败", err)
 				return
 			}
-			log.Logger.Info("钉钉发送成功")
+			log.Logger.Info("钉钉通知发送成功")
 		}
 	}
 }
 
 func dingSend(b *Handler) error {
-	baktime := time.Now().Format("2006年01月02日15:04:01")
 	if config.GetBoolConf("dingProxyAgent", "enable") {
 		log.Logger.Infof("%s:%s调用钉钉代理发送钉钉消息", b.Host, b.DbName)
-		msg := fmt.Sprintf("- 备份数据库:%s\n- 备份时间:%v\n- 备份状态:%s\n- OSS上传状态:%s\n- 备份文件目录:%s\n![screenshot](http://web.ts-it.cn/img/index/section_4_img.png)\n", b.Host, baktime, b.BakMsg, pkg.StatusConversion(b.OssStatus), b.FileName)
-		dingSender := dingproxy.NewDingSender(b.DingConfig.DingAccessToken, b.DingConfig.DingSecret, msg)
+		dingSender := dingproxy.NewDingSender(b.DingConfig.DingAccessToken, b.DingConfig.DingSecret, getDingMessage(b))
 		data, err := dingSender.SendMarkdown()
 		if err != nil {
 			b.DingStatus = 0
@@ -310,11 +308,10 @@ func dingSend(b *Handler) error {
 		log.Logger.Debug("钉钉发送响应结果:", data)
 	} else {
 		log.Logger.Infof("%s:%s使用自身能力发送钉钉消息", b.Host, b.DbName)
+
 		markContent := map[string]string{
 			"title": b.Host + b.DbName + "备份状态",
-			"text": fmt.Sprintf(
-				"- 备份数据库:%s\n- 备份时间:%v\n- 备份状态:%s\n- OSS上传状态:%s\n- 备份文件目录:%s\n![screenshot](%v)\n-备注:%v",
-				b.Host, baktime, b.BakMsg, pkg.StatusConversion(b.OssStatus), bakFilePath, config.GetStringConf("base", "photoUrl"), config.GetStringConf("base", "content")),
+			"text":  getDingMessage(b),
 		}
 		webhook := ding.Webhook{AtAll: true, Secret: b.DingConfig.DingSecret, AccessToken: b.DingConfig.DingAccessToken}
 		if err := webhook.SendMarkDown(markContent); err != nil {
@@ -325,4 +322,33 @@ func dingSend(b *Handler) error {
 	// 钉钉消息发送成功，更新状态
 	b.DingStatus = 1
 	return nil
+}
+
+func getDingMessage(b *Handler) string {
+	baktime := time.Now().Format("2006年01月02日15:04:01")
+	var message string
+	if b.BakStatus != 1 {
+		message = fmt.Sprintf("备份失败 : <font color=#FF0000>%s</font>", b.BakMsg)
+	} else {
+		message = fmt.Sprintf("<font color=#00FF00>%s</font>", b.BakMsg)
+	}
+	return fmt.Sprintf(
+		"- 备份主机:%s\n"+
+			"- 备份数据库:%s\n"+
+			"- 备份状态:%s\n"+
+			"- OSS上传状态:%s\n"+
+			"- 节点信息:%s\n"+
+			"- 加密状态:%s\n"+
+			"- 备份文件目录:%s\n"+
+			"- 备份时间:%v\n"+
+			"![screenshot](%s)\n",
+		b.Host,
+		b.DbName,
+		message,
+		pkg.StatusConversion(b.OssStatus),
+		config.GetStringConf("register", "content"),
+		pkg.StatusConversion(b.EncryptionStatus),
+		b.FileName,
+		baktime,
+		config.GetStringConf("base", "photoUrl"))
 }

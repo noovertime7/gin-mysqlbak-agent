@@ -22,7 +22,6 @@ func NewDingSender(token, secret, message string) *dingSendMessage {
 	return &dingSendMessage{
 		AccessToken:  token,
 		AccessSecret: secret,
-		Message:      message + "\n- 备注:" + config.GetStringConf("base", "content"),
 		Title:        config.GetStringConf("dingProxyAgent", "title"),
 	}
 }
