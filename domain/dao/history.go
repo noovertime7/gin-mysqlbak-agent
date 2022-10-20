@@ -21,10 +21,10 @@ type BakHistory struct {
 	Msg              string       `gorm:"column:message" description:"消息"`
 	FileSize         int64        `gorm:"column:file_size" description:"文件大小"`
 	FileName         string       `gorm:"column:filename" description:"文件名"`
-	EncryptionStatus int          `gorm:"column:encryption_status;type:int(11);NOT NULL" json:"encryption_status"`
+	EncryptionStatus int64        `gorm:"column:encryption_status;type:int(11);NOT NULL" json:"encryption_status"`
 	BakTime          time.Time    `gorm:"column:bak_time" description:"备份时间"`
 	IsDeleted        int64        `json:"is_deleted" gorm:"column:is_deleted"`
-	IsCleaned        int          `gorm:"column:is_cleaned;type:int(11);comment:是否被清理;NOT NULL" json:"is_cleand"`
+	IsCleaned        int64        `gorm:"column:is_cleaned;type:int(11);comment:是否被清理;NOT NULL" json:"is_cleand"`
 	CleanedAt        sql.NullTime `gorm:"column:cleaned_at;type:datetime" json:"cleaned_at"`
 }
 

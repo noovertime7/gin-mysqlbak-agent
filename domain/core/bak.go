@@ -42,7 +42,7 @@ type Handler struct {
 	BakStatus        int64
 	BakMsg           string
 	FileName         string
-	EncryptionStatus int
+	EncryptionStatus int64
 	FileSize         int64
 }
 

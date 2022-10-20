@@ -31,16 +31,18 @@ func (h *HistoryService) GetHistoryList(ctx context.Context, historyInfo *bakhis
 	var outList []*bakhistory.HistoryListOutItem
 	for _, listIterm := range list {
 		outIterm := &bakhistory.HistoryListOutItem{
-			ID:         listIterm.Id,
-			Host:       listIterm.Host,
-			DBName:     listIterm.DBName,
-			DingStatus: listIterm.DingStatus,
-			OSSStatus:  listIterm.OssStatus,
-			Status:     listIterm.BakStatus,
-			Message:    listIterm.Msg,
-			FileSize:   strconv.Itoa(int(listIterm.FileSize)),
-			FileName:   listIterm.FileName,
-			BakTime:    listIterm.BakTime.Format("2006年01月02日15:04:01"),
+			ID:               listIterm.Id,
+			Host:             listIterm.Host,
+			DBName:           listIterm.DBName,
+			DingStatus:       listIterm.DingStatus,
+			OSSStatus:        listIterm.OssStatus,
+			Status:           listIterm.BakStatus,
+			Message:          listIterm.Msg,
+			FileSize:         strconv.Itoa(int(listIterm.FileSize)),
+			FileName:         listIterm.FileName,
+			BakTime:          listIterm.BakTime.Format("2006年01月02日15:04:01"),
+			CleanedStatus:    listIterm.IsCleaned,
+			EncryptionStatus: listIterm.EncryptionStatus,
 		}
 		outList = append(outList, outIterm)
 	}
