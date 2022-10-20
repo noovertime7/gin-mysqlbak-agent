@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"backupAgent/domain/pkg"
 	"backupAgent/proto/backupAgent/host"
 	"context"
 	"gorm.io/gorm"
@@ -25,16 +26,22 @@ func (h *HostDatabase) TableName() string {
 }
 
 func (h *HostDatabase) Save(ctx context.Context, tx *gorm.DB) error {
+	// 保存加密密码
+	h.Password = pkg.Base58Encoding(h.Password)
 	return tx.WithContext(ctx).Save(h).Error
 }
 
 func (h *HostDatabase) Updates(ctx context.Context, tx *gorm.DB) error {
+	// 保存加密密码
+	h.Password = pkg.Base58Encoding(h.Password)
 	return tx.WithContext(ctx).Table(h.TableName()).Updates(h).Error
 }
 
 func (h *HostDatabase) Find(ctx context.Context, tx *gorm.DB, search *HostDatabase) (*HostDatabase, error) {
 	out := &HostDatabase{}
 	err := tx.WithContext(ctx).Where(search).Find(out).Error
+	// 解密密码
+	out.Password = pkg.Base58Decoding(out.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -45,14 +52,6 @@ func (h *HostDatabase) UpdatesStatus(ctx context.Context, tx *gorm.DB) error {
 	return tx.WithContext(ctx).Table(h.TableName()).Where("host = ?", h.Host).Updates(map[string]interface{}{
 		"host_status": h.HostStatus,
 	}).Error
-}
-
-func (h *HostDatabase) FindAllHost(ctx context.Context, tx *gorm.DB) ([]HostDatabase, error) {
-	var hostlist []HostDatabase
-	if err := tx.WithContext(ctx).Where("is_deleted = 0").Find(&hostlist).Error; err != nil {
-		return nil, err
-	}
-	return hostlist, nil
 }
 
 func (h *HostDatabase) PageList(ctx context.Context, tx *gorm.DB, params *host.HostListInput) ([]*HostDatabase, int64, error) {

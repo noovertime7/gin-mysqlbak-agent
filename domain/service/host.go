@@ -85,7 +85,6 @@ func (h *HostService) GetHostList(ctx context.Context, hostInfo *host.HostListIn
 			ID:         listIterm.Id,
 			Host:       listIterm.Host,
 			UserName:   listIterm.User,
-			Password:   listIterm.Password,
 			HostStatus: listIterm.HostStatus,
 			Content:    listIterm.Content,
 			TaskNum:    total,
