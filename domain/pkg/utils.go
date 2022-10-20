@@ -2,8 +2,12 @@ package pkg
 
 import (
 	"backupAgent/domain/pkg/log"
+	"bytes"
 	"github.com/gorhill/cronexpr"
+	"math/big"
 	"os"
+	"path"
+	"strings"
 	"time"
 )
 
@@ -77,4 +81,64 @@ func StatusConversion(a int64) string {
 // GetDateByKeepNumber 根据保留周期生成日期
 func GetDateByKeepNumber(k int) string {
 	return time.Now().AddDate(0, 0, -k).Format("2006-01-02")
+}
+
+func CleanLocalFile(FilePath string) error {
+	log.Logger.Infof("删除本地文件:%s", FilePath)
+	return os.Remove(FilePath)
+}
+
+//GetFilePath 去除后缀
+func GetFilePath(filePath string) string {
+	ext := path.Ext(filePath)
+	return strings.TrimSuffix(filePath, ext)
+}
+
+// Base58Encoding base58编码
+func Base58Encoding(src string) string {
+	srcByte := []byte(src)
+	// todo 转成十进制
+	i := big.NewInt(0).SetBytes(srcByte)
+	//  循环取余
+	var modSlice []byte
+	for i.Cmp(big.NewInt(0)) > 0 {
+		mod := big.NewInt(0)
+		i58 := big.NewInt(58)
+		i.DivMod(i, i58, mod)                         // 取余
+		modSlice = append(modSlice, b58[mod.Int64()]) // 将余数添加到数组中
+	}
+	//  把0使用字节'1'代替
+	for _, s := range srcByte {
+		if s != 0 {
+			break
+		}
+		modSlice = append(modSlice, byte('1'))
+	}
+	//  反转byte数组
+	retModSlice := ReverseByteArr(modSlice)
+	log.Logger.Info("Base58加密成功")
+	return string(retModSlice)
+}
+
+// Base58Decoding base58解码
+func Base58Decoding(src string) string {
+	// 转成byte数组
+	srcByte := []byte(src)
+	// 这里得到的是十进制
+	ret := big.NewInt(0)
+	for _, b := range srcByte {
+		i := bytes.IndexByte(b58, b)
+		ret.Mul(ret, big.NewInt(58))       // 乘回去
+		ret.Add(ret, big.NewInt(int64(i))) // 相加
+	}
+	log.Logger.Info("Base58解密成功")
+	return string(ret.Bytes())
+}
+
+// ReverseByteArr byte数组进行反转方式2
+func ReverseByteArr(b []byte) []byte {
+	for i, j := 0, len(b)-1; i < j; i, j = i+1, j-1 {
+		b[i], b[j] = b[j], b[i]
+	}
+	return b
 }

@@ -11,20 +11,21 @@ import (
 )
 
 type BakHistory struct {
-	Id         int64        `gorm:"primary_key" description:"自增主键"`
-	TaskID     int64        `gorm:"column:task_id" description:"任务id"`
-	Host       string       `gorm:"column:host" description:"主机"`
-	DBName     string       `gorm:"column:db_name" description:"库名"`
-	OssStatus  int64        `gorm:"column:oss_status"  description:"钉钉发送状态"`
-	DingStatus int64        `gorm:"column:ding_status"  description:"OSS保存状态"`
-	BakStatus  int64        `gorm:"column:bak_status" description:"备份状态"`
-	Msg        string       `gorm:"column:message" description:"消息"`
-	FileSize   int64        `gorm:"column:file_size" description:"文件大小"`
-	FileName   string       `gorm:"column:filename" description:"文件名"`
-	BakTime    time.Time    `gorm:"column:bak_time" description:"备份时间"`
-	IsDeleted  int64        `json:"is_deleted" gorm:"column:is_deleted"`
-	IsCleaned  int          `gorm:"column:is_cleaned;type:int(11);comment:是否被清理;NOT NULL" json:"is_cleand"`
-	CleanedAt  sql.NullTime `gorm:"column:cleaned_at;type:datetime" json:"cleaned_at"`
+	Id               int64        `gorm:"primary_key" description:"自增主键"`
+	TaskID           int64        `gorm:"column:task_id" description:"任务id"`
+	Host             string       `gorm:"column:host" description:"主机"`
+	DBName           string       `gorm:"column:db_name" description:"库名"`
+	OssStatus        int64        `gorm:"column:oss_status"  description:"钉钉发送状态"`
+	DingStatus       int64        `gorm:"column:ding_status"  description:"OSS保存状态"`
+	BakStatus        int64        `gorm:"column:bak_status" description:"备份状态"`
+	Msg              string       `gorm:"column:message" description:"消息"`
+	FileSize         int64        `gorm:"column:file_size" description:"文件大小"`
+	FileName         string       `gorm:"column:filename" description:"文件名"`
+	EncryptionStatus int          `gorm:"column:encryption_status;type:int(11);NOT NULL" json:"encryption_status"`
+	BakTime          time.Time    `gorm:"column:bak_time" description:"备份时间"`
+	IsDeleted        int64        `json:"is_deleted" gorm:"column:is_deleted"`
+	IsCleaned        int          `gorm:"column:is_cleaned;type:int(11);comment:是否被清理;NOT NULL" json:"is_cleand"`
+	CleanedAt        sql.NullTime `gorm:"column:cleaned_at;type:datetime" json:"cleaned_at"`
 }
 
 func (b *BakHistory) TableName() string {

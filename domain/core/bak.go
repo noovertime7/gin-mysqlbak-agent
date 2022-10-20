@@ -23,26 +23,27 @@ import (
 )
 
 type Handler struct {
-	TaskID      int64
-	Cron        *cron.Cron
-	Engine      *xorm.Engine
-	Host        string
-	BackInfoId  string
-	PassWord    string
-	User        string
-	Port        string
-	DbName      string
-	BackupCycle string
-	KeepNumber  int64
-	ISAllDBBak  int64
-	DingConfig  *dao.DingDatabase
-	OssConfig   *dao.OssDatabase
-	DingStatus  int64
-	OssStatus   int64
-	BakStatus   int64
-	BakMsg      string
-	FileName    string
-	FileSize    int64
+	TaskID           int64
+	Cron             *cron.Cron
+	Engine           *xorm.Engine
+	Host             string
+	BackInfoId       string
+	PassWord         string
+	User             string
+	Port             string
+	DbName           string
+	BackupCycle      string
+	KeepNumber       int64
+	ISAllDBBak       int64
+	DingConfig       *dao.DingDatabase
+	OssConfig        *dao.OssDatabase
+	DingStatus       int64
+	OssStatus        int64
+	BakStatus        int64
+	BakMsg           string
+	FileName         string
+	EncryptionStatus int
+	FileSize         int64
 }
 
 var CronJob = make(map[int64]*cron.Cron)
@@ -167,7 +168,16 @@ func (b *Handler) Run() {
 	b.OssStatus = 2
 	//判断是否启动钉钉提醒
 	AfterBak(b)
-	//发送对象到channel
+	// 判断是否加密成功，加密成功后直接删除本地文件
+	if b.EncryptionStatus == 1 {
+		OldfileName := pkg.GetFilePath(b.FileName) + ".sql"
+		if err := pkg.CleanLocalFile(OldfileName); err != nil {
+			log.Logger.Errorf("备份完成后清理本地文件失败%s", OldfileName)
+			b.BakMsg = "备份完成后清理本地文件失败"
+		}
+	} else {
+		b.BakMsg = "加密备份文件失败，上传未加密文件"
+	}
 	log.Logger.Info("备份数据库成功,保存备份历史到数据库,发送消息")
 	if err := b.StoreDatabase(); err != nil {
 		log.Logger.Error("数据库存储失败", err)
@@ -192,25 +202,38 @@ func (b *Handler) RunMysqlDump() error {
 
 func (b *Handler) StoreDatabase() error {
 	historyDB := &dao.BakHistory{
-		TaskID:     b.TaskID,
-		Host:       b.Host,
-		DBName:     b.DbName,
-		OssStatus:  b.OssStatus,
-		DingStatus: b.DingStatus,
-		BakStatus:  b.BakStatus,
-		Msg:        b.BakMsg,
-		FileSize:   b.FileSize,
-		FileName:   b.FileName,
-		BakTime:    time.Now(),
-		IsDeleted:  0,
+		TaskID:           b.TaskID,
+		Host:             b.Host,
+		DBName:           b.DbName,
+		OssStatus:        b.OssStatus,
+		DingStatus:       b.DingStatus,
+		BakStatus:        b.BakStatus,
+		Msg:              b.BakMsg,
+		FileSize:         b.FileSize,
+		FileName:         b.FileName,
+		EncryptionStatus: b.EncryptionStatus,
+		BakTime:          time.Now(),
+		IsDeleted:        0,
 	}
 	return historyDB.Save(context.Background(), database.Gorm)
 }
 
+var bakFilePath string
+
 func AfterBak(b *Handler) {
+	// 加密备份文件，如果加密失败，上传原有文件，加密成功上传新文件
+	enFile, err := pkg.Encryption(b.FileName)
+	if err != nil {
+		log.Logger.Errorf("%s加密失败%v", b.FileName, err)
+		bakFilePath = b.FileName
+		b.EncryptionStatus = 0
+	} else {
+		bakFilePath = enFile
+		b.EncryptionStatus = 1
+	}
 	//判断是否启动OSS保存
 	if b.OssConfig.IsOssSave == 1 && b.BakStatus == 1 {
-		FileName := b.FileName
+		FileName := bakFilePath
 		Endpoint := b.OssConfig.Endpoint
 		Accesskey := b.OssConfig.OssAccess
 		Secretkey := b.OssConfig.OssSecret
@@ -235,7 +258,7 @@ func AfterBak(b *Handler) {
 			b.OssStatus = 1
 		case 1:
 			log.Logger.Debug("OSSType为1保存至minio中")
-			client, err := minio.NewClient(Endpoint, Accesskey, Secretkey, BucketName, Directory, b.FileName)
+			client, err := minio.NewClient(Endpoint, Accesskey, Secretkey, BucketName, Directory, bakFilePath)
 			if err != nil {
 				log.Logger.Errorf("%s:%s创建minio客户端失败:%v", b.Host, b.DbName, err.Error())
 				b.OssStatus = 0
@@ -291,7 +314,7 @@ func dingSend(b *Handler) error {
 			"title": b.Host + b.DbName + "备份状态",
 			"text": fmt.Sprintf(
 				"- 备份数据库:%s\n- 备份时间:%v\n- 备份状态:%s\n- OSS上传状态:%s\n- 备份文件目录:%s\n![screenshot](%v)\n-备注:%v",
-				b.Host, baktime, b.BakMsg, pkg.StatusConversion(b.OssStatus), b.FileName, config.GetStringConf("base", "photoUrl"), config.GetStringConf("base", "content")),
+				b.Host, baktime, b.BakMsg, pkg.StatusConversion(b.OssStatus), bakFilePath, config.GetStringConf("base", "photoUrl"), config.GetStringConf("base", "content")),
 		}
 		webhook := ding.Webhook{AtAll: true, Secret: b.DingConfig.DingSecret, AccessToken: b.DingConfig.DingAccessToken}
 		if err := webhook.SendMarkDown(markContent); err != nil {
