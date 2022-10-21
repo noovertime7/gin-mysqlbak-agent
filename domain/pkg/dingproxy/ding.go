@@ -13,7 +13,6 @@ type dingSendMessage struct {
 	AccessSecret string `json:"access_secret"`
 	Message      string `json:"message"`
 	Title        string `json:"title"`
-	Content      string `json:"content"`
 }
 
 var url = "http://" + config.GetStringConf("dingProxyAgent", "addr")
@@ -23,6 +22,7 @@ func NewDingSender(token, secret, message string) *dingSendMessage {
 		AccessToken:  token,
 		AccessSecret: secret,
 		Title:        config.GetStringConf("dingProxyAgent", "title"),
+		Message:      message,
 	}
 }
 

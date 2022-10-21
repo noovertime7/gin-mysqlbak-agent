@@ -308,7 +308,6 @@ func dingSend(b *Handler) error {
 		log.Logger.Debug("钉钉发送响应结果:", data)
 	} else {
 		log.Logger.Infof("%s:%s使用自身能力发送钉钉消息", b.Host, b.DbName)
-
 		markContent := map[string]string{
 			"title": b.Host + b.DbName + "备份状态",
 			"text":  getDingMessage(b),
