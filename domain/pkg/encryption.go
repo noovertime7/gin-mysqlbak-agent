@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"backupAgent/domain/config"
 	"backupAgent/domain/pkg/log"
 	"crypto/aes"
 	"crypto/cipher"
@@ -14,7 +15,7 @@ func Encryption(filePath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	key := []byte("1233214567893332")
+	key := []byte(config.GetStringConf("base", "key"))
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
