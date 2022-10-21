@@ -86,6 +86,8 @@ func (t *TaskHandler) TaskList(ctx context.Context, in *task.TaskListInput, out 
 		log.Logger.Error("查询Task列表失败")
 		return err
 	}
+	out.PageNo = in.PageNo
+	out.PageSize = in.PageSize
 	return nil
 }
 
