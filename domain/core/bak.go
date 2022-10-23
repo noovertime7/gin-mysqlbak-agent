@@ -140,25 +140,9 @@ func (b *Handler) Run() {
 				log.Logger.Error("数据库存储失败", err)
 				return
 			}
-			log.Logger.Debug("数据库存储成功")
+			log.Logger.Debug("备份失败,数据库存储成功")
 			return
 		}
-		b.BakMsg = "success"
-		b.BakStatus = 1
-		b.FileSize = int64(pkg.GetFileSize(b.FileName))
-		//首先判定钉钉 oss都操作成功，状态改为1
-		b.DingStatus = 2
-		b.OssStatus = 2
-		//判断是否启动钉钉提醒
-		AfterBak(b)
-		//发送对象到channel
-		log.Logger.Info("备份数据库成功,保存备份历史到数据库,发送消息")
-		if err := b.StoreDatabase(); err != nil {
-			log.Logger.Error("数据库存储失败", err)
-			return
-		}
-		log.Logger.Debug("数据库存储成功")
-		return
 	}
 	b.BakMsg = "success"
 	b.BakStatus = 1
@@ -170,15 +154,15 @@ func (b *Handler) Run() {
 	AfterBak(b)
 	// 判断是否加密成功，加密成功后直接删除本地文件
 	if b.EncryptionStatus == 1 {
-		OldfileName := pkg.GetFilePath(b.FileName) + ".sql"
-		if err := pkg.CleanLocalFile(OldfileName); err != nil {
-			log.Logger.Errorf("备份完成后清理本地文件失败%s", OldfileName)
+		OldFileName := pkg.GetFilePath(b.FileName) + ".sql"
+		if err := pkg.CleanLocalFile(OldFileName); err != nil {
+			log.Logger.Errorf("备份完成后清理本地文件失败%s", OldFileName)
 			b.BakMsg = "备份完成后清理本地文件失败"
 		}
 	} else {
 		b.BakMsg = "加密备份文件失败，上传未加密文件"
 	}
-	log.Logger.Info("备份数据库成功,保存备份历史到数据库,发送消息")
+	log.Logger.Infof("备份数据库成功,保存备份历史到数据库,备份文件:%s", b.FileName)
 	if err := b.StoreDatabase(); err != nil {
 		log.Logger.Error("数据库存储失败", err)
 		return
@@ -218,22 +202,19 @@ func (b *Handler) StoreDatabase() error {
 	return historyDB.Save(context.Background(), database.Gorm)
 }
 
-var bakFilePath string
-
 func AfterBak(b *Handler) {
 	// 加密备份文件，如果加密失败，上传原有文件，加密成功上传新文件
 	enFile, err := pkg.Encryption(b.FileName)
 	if err != nil {
 		log.Logger.Errorf("%s加密失败%v", b.FileName, err)
-		bakFilePath = b.FileName
 		b.EncryptionStatus = 0
 	} else {
-		bakFilePath = enFile
 		b.EncryptionStatus = 1
+		b.FileName = enFile
 	}
 	//判断是否启动OSS保存
 	if b.OssConfig.IsOssSave == 1 && b.BakStatus == 1 {
-		FileName := bakFilePath
+		FileName := b.FileName
 		Endpoint := b.OssConfig.Endpoint
 		Accesskey := b.OssConfig.OssAccess
 		Secretkey := b.OssConfig.OssSecret
@@ -258,7 +239,7 @@ func AfterBak(b *Handler) {
 			b.OssStatus = 1
 		case 1:
 			log.Logger.Debug("OSSType为1保存至minio中")
-			client, err := minio.NewClient(Endpoint, Accesskey, Secretkey, BucketName, Directory, bakFilePath)
+			client, err := minio.NewClient(Endpoint, Accesskey, Secretkey, BucketName, Directory, FileName)
 			if err != nil {
 				log.Logger.Errorf("%s:%s创建minio客户端失败:%v", b.Host, b.DbName, err.Error())
 				b.OssStatus = 0

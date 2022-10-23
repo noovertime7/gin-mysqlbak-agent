@@ -38,6 +38,7 @@ func Clean() error {
 				log.Logger.Infof("当前任务ID %v,需要清理的数量为0", t.Id)
 				continue
 			}
+			log.Logger.Infof("任务ID%d当前需要清理的文件 %d", t.Id, len(historys))
 			for _, history := range historys {
 				log.Logger.Debugf("[Mysql]当前任务ID%d，超过保留周期%d，开始清理%s之前的sql文件，清理文件%s", t.Id, t.KeepNumber, keepTime, history.FileName)
 				detail, err := tsvc.TaskDetail(ctx, &task.TaskIDInput{ID: t.Id})
@@ -56,7 +57,11 @@ func Clean() error {
 				}
 				handler := clean.NewMysqlCleanHandler(history.FileName, history.Id, OssInfo)
 				factory := clean.NewCleanerFactory(handler)
-				return factory.Run()
+				if err := factory.Run(); err != nil {
+					log.Logger.Errorf("数据清理失败,清理文件:%s，失败原因%v", history.FileName, err)
+					return err
+				}
+				log.Logger.Infof("数据清理成功%v", history.FileName)
 			}
 		case pkg.ElasticHost:
 			esHistoryDB := &dao.ESHistoryDB{TaskID: t.Id}
@@ -68,6 +73,7 @@ func Clean() error {
 				log.Logger.Infof("当前任务ID %v,需要清理的数量为0", t.Id)
 				continue
 			}
+			log.Logger.Infof("任务ID%d当前需要清理的文件 %d", t.Id, len(historys))
 			for _, history := range historys {
 				log.Logger.Debugf("[Elastic]当前任务ID%d，超过保留周期%d，开始清理%s之前的快照，清理快照%s", t.Id, t.KeepNumber, keepTime, history.Snapshot)
 				hostDB := &dao.HostDatabase{Id: t.HostID}
@@ -77,7 +83,11 @@ func Clean() error {
 				}
 				handler := clean.NewElasticCleanHandler(host.Host, host.User, host.Password, history.Snapshot, history.Id)
 				factory := clean.NewCleanerFactory(handler)
-				return factory.Run()
+				if err := factory.Run(); err != nil {
+					log.Logger.Errorf("数据清理失败,清理文件:%s，失败原因%v", history.Snapshot, err)
+					return err
+				}
+				log.Logger.Infof("数据清理成功%v", history.Snapshot)
 			}
 		}
 	}
