@@ -5,6 +5,7 @@ import (
 	"flag"
 	"gopkg.in/ini.v1"
 	"os"
+	"testing"
 )
 
 var Config *ini.File
@@ -12,17 +13,31 @@ var Config *ini.File
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "/domain/config/config.ini", "set config file")
+	flag.StringVar(&configFile, "config", "", "set config file")
+	path := getConfigPath()
+	InitConfig(path)
+}
+
+func getConfigPath() string {
+	testing.Init()
 	flag.Parse()
+	if configFile != "" {
+		return configFile
+	}
+	p, _ := os.Getwd()
+	return p + "/domain/config/config.ini"
+}
+
+func InitConfig(path string) {
 	if Config != nil {
 		return
 	}
-	path, err := os.Getwd()
-	cfg, err := ini.Load(path + configFile)
+	cfg, err := ini.Load(path)
 	if err != nil {
-		log.Logger.Fatal("加载配置文件失败,Fail to read file: ", err)
+		log.Logger.Error("加载配置文件失败,Fail to read file: ", err)
+		return
 	}
-	log.Logger.Infof("加载配置文件成功，当前配置文件路径:%s", path+configFile)
+	log.Logger.Infof("加载配置文件成功，当前配置文件路径:%s", path)
 	Config = cfg
 }
 

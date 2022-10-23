@@ -1,7 +1,6 @@
 package dingproxy
 
 import (
-	"backupAgent/domain/config"
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
@@ -13,16 +12,16 @@ type dingSendMessage struct {
 	AccessSecret string `json:"access_secret"`
 	Message      string `json:"message"`
 	Title        string `json:"title"`
+	Url          string `json:"url"`
 }
 
-var url = "http://" + config.GetStringConf("dingProxyAgent", "addr")
-
-func NewDingSender(token, secret, message string) *dingSendMessage {
+func NewDingSender(token, secret, message, title, url string) *dingSendMessage {
 	return &dingSendMessage{
 		AccessToken:  token,
 		AccessSecret: secret,
-		Title:        config.GetStringConf("dingProxyAgent", "title"),
+		Title:        title,
 		Message:      message,
+		Url:          url,
 	}
 }
 
@@ -32,7 +31,7 @@ func (d *dingSendMessage) SendMessage() (string, error) {
 	if err := enc.Encode(d); err != nil {
 		return "", err
 	}
-	res, err := http.Post(url+"/ding/sendmsg", "application/json", buf)
+	res, err := http.Post(d.Url+"/ding/sendmsg", "application/json", buf)
 	if err != nil {
 		return "", err
 	}
@@ -50,7 +49,7 @@ func (d *dingSendMessage) SendMarkdown() (string, error) {
 	if err := enc.Encode(d); err != nil {
 		return "", err
 	}
-	res, err := http.Post(url+"/ding/sendmd", "application/json", buf)
+	res, err := http.Post(d.Url+"/ding/sendmd", "application/json", buf)
 	if err != nil {
 		return "", err
 	}

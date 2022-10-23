@@ -12,6 +12,7 @@ WORKDIR /app
 ENV TZ Asia/Shanghai
 COPY --from=builder /build/gin-mysqlbak-agent /app/gin-mysqlbak-agent
 COPY --from=builder /build/domain/config/config.ini /app/domain/config/config.ini
+COPY --from=builder /build/domain/template/ /app/domain/template
 COPY --from=builder /build/docker/mysqldump /usr/bin
 RUN chmod 777 /usr/bin/mysqldump
 CMD ["./gin-mysqlbak-agent"]

@@ -46,6 +46,10 @@ func CreateDir(path string) {
 	}
 }
 
+func GetTime(t time.Time) string {
+	return t.Format("2006-01-02 15-04")
+}
+
 func HasDir(path string) (bool, error) {
 	_, _err := os.Stat(path)
 	if _err == nil {
@@ -88,7 +92,7 @@ func CleanLocalFile(FilePath string) error {
 	return os.Remove(FilePath)
 }
 
-//GetFilePath 去除后缀
+// GetFilePath 去除后缀
 func GetFilePath(filePath string) string {
 	ext := path.Ext(filePath)
 	return strings.TrimSuffix(filePath, ext)
