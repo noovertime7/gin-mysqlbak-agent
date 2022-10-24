@@ -9,11 +9,12 @@ import (
 	"backupAgent/proto/backupAgent/host"
 	"context"
 	"errors"
+	"time"
 )
 
 type BakService struct{}
 
-func (b *BakService) StartBak(ctx context.Context, bakInfo *bak.StartBakInput) error {
+func (b *BakService) StartBak(ctx context.Context, bakInfo *bak.StartBakInput, isTest bool) error {
 	log.Logger.Debug("Service层开始启动备份任务，入参:", bakInfo)
 	taskDB := &dao.TaskInfo{Id: bakInfo.TaskID}
 	taskDetail, err := taskDB.TaskDetail(ctx, database.Gorm, taskDB)
@@ -22,6 +23,10 @@ func (b *BakService) StartBak(ctx context.Context, bakInfo *bak.StartBakInput) e
 	}
 	if taskDetail.Info.IsDelete.Int64 == 1 {
 		return errors.New("任务已被删除,启动失败")
+	}
+	if isTest {
+		log.Logger.Info("当前启动为测试任务，将备份周期修改为* * * * *")
+		taskDetail.Info.BackupCycle = "* * * * *"
 	}
 	bakHandler, err := core.NewBakHandler(taskDetail)
 	if err != nil {
@@ -33,6 +38,24 @@ func (b *BakService) StartBak(ctx context.Context, bakInfo *bak.StartBakInput) e
 	taskDB.Status = 1
 	log.Logger.Debug("Service层修改bak任务状态", taskDB)
 	return taskDB.UpdateStatus(ctx, database.Gorm, taskDB)
+}
+
+func (b *BakService) TestBak(ctx context.Context, bakInfo *bak.StartBakInput) error {
+	if err := b.StartBak(ctx, bakInfo, true); err != nil {
+		return err
+	}
+	go func() {
+		time.Sleep(1 * time.Minute)
+		if err := b.StopBak(ctx, &bak.StopBakInput{
+			TaskID:      bakInfo.TaskID,
+			ServiceName: bakInfo.ServiceName,
+		}); err != nil {
+			log.Logger.Error("测试任务停止失败", err)
+			return
+		}
+		return
+	}()
+	return nil
 }
 
 func (b *BakService) StopBak(ctx context.Context, bakInfo *bak.StopBakInput) error {

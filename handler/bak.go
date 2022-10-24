@@ -11,7 +11,7 @@ type BakHandler struct{}
 var bakService *service.BakService
 
 func (b *BakHandler) StartBak(ctx context.Context, in *bak.StartBakInput, out *bak.BakOneMessage) error {
-	if err := bakService.StartBak(ctx, in); err != nil {
+	if err := bakService.StartBak(ctx, in, false); err != nil {
 		out.Message = "启动失败"
 		out.OK = false
 		return err
@@ -20,6 +20,18 @@ func (b *BakHandler) StartBak(ctx context.Context, in *bak.StartBakInput, out *b
 	out.OK = true
 	return nil
 }
+
+func (b *BakHandler) TestBak(ctx context.Context, in *bak.StartBakInput, out *bak.BakOneMessage) error {
+	if err := bakService.TestBak(ctx, in); err != nil {
+		out.Message = "测试启动失败"
+		out.OK = false
+		return err
+	}
+	out.Message = "测试任务启动成功，请一分钟后查看历史记录"
+	out.OK = true
+	return nil
+}
+
 func (b *BakHandler) StopBak(ctx context.Context, in *bak.StopBakInput, out *bak.BakOneMessage) error {
 	if err := bakService.StopBak(ctx, in); err != nil {
 		out.Message = "停止失败"
