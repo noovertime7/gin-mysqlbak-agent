@@ -46,7 +46,8 @@ func (b *BakService) TestBak(ctx context.Context, bakInfo *bak.StartBakInput) er
 	}
 	go func() {
 		time.Sleep(1 * time.Minute)
-		if err := b.StopBak(ctx, &bak.StopBakInput{
+		newCtx := context.TODO()
+		if err := b.StopBak(newCtx, &bak.StopBakInput{
 			TaskID:      bakInfo.TaskID,
 			ServiceName: bakInfo.ServiceName,
 		}); err != nil {
