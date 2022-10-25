@@ -3,6 +3,7 @@ package template
 import (
 	"backupAgent/domain/pkg/ding"
 	"backupAgent/domain/pkg/dingproxy"
+	"backupAgent/domain/pkg/log"
 	"bytes"
 	"errors"
 	"html/template"
@@ -79,10 +80,11 @@ func (d *Ding) SendByProxy(msg string, proxyAddr string) error {
 	}
 	url := "http://" + proxyAddr
 	sender := dingproxy.NewDingSender(d.DingAccessToken, d.DingSecret, msg, d.Title, url)
-	_, err := sender.SendMarkdown()
+	data, err := sender.SendMarkdown()
 	if err != nil {
 		return err
 	}
+	log.Logger.Info("发送结果:", data)
 	return nil
 }
 

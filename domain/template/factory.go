@@ -13,7 +13,7 @@ type shardTemplateFactory struct {
 type FactoryOption func(*shardTemplateFactory) *shardTemplateFactory
 
 func (s *shardTemplateFactory) Ding(sa *DingSA, info *SendInfo, ops ...FactoryOption) DingSender {
-	sf := &shardTemplateFactory{}
+	sf := &shardTemplateFactory{Title: s.Title}
 	if len(ops) > 0 {
 		for _, opt := range ops {
 			sf = opt(s)

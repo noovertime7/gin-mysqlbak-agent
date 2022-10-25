@@ -3,6 +3,7 @@ package dingproxy
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -49,6 +50,7 @@ func (d *dingSendMessage) SendMarkdown() (string, error) {
 	if err := enc.Encode(d); err != nil {
 		return "", err
 	}
+	fmt.Println(d)
 	res, err := http.Post(d.Url+"/ding/sendmd", "application/json", buf)
 	if err != nil {
 		return "", err

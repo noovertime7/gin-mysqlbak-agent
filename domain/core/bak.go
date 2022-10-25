@@ -279,7 +279,7 @@ func AfterBak(b *Handler) {
 }
 
 func dingSend(b *Handler) error {
-	templateFactory := template.NewTemplateFactory("备份状态")
+	templateFactory := template.NewTemplateFactory(config.GetStringConf("base", "serviceName") + "备份状态")
 	sa := b.getDingSa()
 	info := b.getInfo()
 	dingSender := templateFactory.Ding(sa, info)
@@ -289,7 +289,7 @@ func dingSend(b *Handler) error {
 	}
 	if config.GetBoolConf("dingProxyAgent", "enable") {
 		log.Logger.Infof("%s:%s调用钉钉代理发送钉钉消息", b.Host, b.DbName)
-		url := "http://" + config.GetStringConf("dingProxyAgent", "addr")
+		url := config.GetStringConf("dingProxyAgent", "addr")
 		return dingSender.SendByProxy(msg, url)
 	} else {
 		log.Logger.Infof("%s:%s使用自身能力发送钉钉消息", b.Host, b.DbName)

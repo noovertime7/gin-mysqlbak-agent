@@ -28,7 +28,7 @@ func TestDing_SendBySelf(t *testing.T) {
 		factory.Title = "OpTest"
 		return factory
 	})
-	ding.SetTemplateFilePath("F:\\gin-mysqlbak-agent\\domain\\template\\ding.md")
+	ding.SetTemplateFilePath("G:\\backupAgent\\domain\\template\\ding.md")
 	message, err := ding.ParseMessage()
 	if err != nil {
 		t.Error(err)
@@ -46,6 +46,7 @@ func TestDing_SendByProxy(t *testing.T) {
 		factory.Title = "OpTest"
 		return factory
 	})
+	ding.SetTemplateFilePath("G:\\backupAgent\\domain\\template\\ding.md")
 	message, err := ding.ParseMessage()
 	if err != nil {
 		t.Error(err)
