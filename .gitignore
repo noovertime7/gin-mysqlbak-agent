@@ -6,3 +6,5 @@ bakfile
 test
 
 dist/
+
+.idea

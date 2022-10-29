@@ -47,6 +47,10 @@ func InitDB() {
 		config.GetStringConf("mysql", "port"),
 		config.GetStringConf("mysql", "dbname"),
 	)
+	if err := initDataBase(mysqlConInfo); err != nil {
+		log.Fatal("自动创建数据库失败，请检查数据库连接信息", err)
+	}
+	mysqlConInfo.dbName = config.GetStringConf("mysql", "dbname")
 	g, err := CreateDB(mysqlConInfo)
 	if err != nil {
 		log.Fatal("初始化数据库失败", err)
@@ -115,4 +119,18 @@ func initTables(db *gorm.DB) error {
 		&dao.OssDatabase{},
 		&dao.ESHistoryDB{},
 	)
+}
+
+func initDataBase(info *mysqlInfo) error {
+	info.dbName = "mysql"
+	db, err := CreateDB(info)
+	if err != nil {
+		return err
+	}
+	dbName := config.GetStringConf("mysql", "dbname")
+	if err := db.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s`;", dbName)).Error; err != nil {
+		log.Println("自动创建数据库失败", err)
+		return err
+	}
+	return nil
 }
