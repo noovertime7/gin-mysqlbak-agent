@@ -83,7 +83,7 @@ func (t *TaskService) TaskAdd(ctx context.Context, taskInfo *task.TaskAddInput) 
 }
 
 func (t *TaskService) isExists(ctx context.Context, taskInfo *task.TaskAddInput) (bool, error) {
-	taskDB := &dao.TaskInfo{DBName: taskInfo.DBName}
+	taskDB := &dao.TaskInfo{DBName: taskInfo.DBName, HostID: taskInfo.HostID}
 	ts, err := taskDB.Find(ctx, database.Gorm, taskDB)
 	if err != nil {
 		return false, err

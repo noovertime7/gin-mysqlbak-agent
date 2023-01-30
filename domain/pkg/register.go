@@ -25,8 +25,8 @@ type registry struct {
 }
 
 var (
-	registerUrl   = config.GetStringConf("register", "registerUrl")
-	deregisterUrl = config.GetStringConf("register", "deregisterUrl")
+	registerUrl   = fmt.Sprintf("http://%s/public/register", config.GetStringConf("register", "serverAddr"))
+	deregisterUrl = fmt.Sprintf("http://%s/public/deregister", config.GetStringConf("register", "serverAddr"))
 )
 
 func NewAgentRegister(serviceName, address, content string, taskNUm, finishNum int) AgentRegister {

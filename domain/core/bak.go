@@ -12,7 +12,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/go-xorm/xorm"
 	"github.com/robfig/cron/v3"
 	"os"
 	"os/exec"
@@ -24,7 +23,6 @@ import (
 type Handler struct {
 	TaskID           int64
 	Cron             *cron.Cron
-	Engine           *xorm.Engine
 	Host             string
 	BackInfoId       string
 	PassWord         string
@@ -60,11 +58,6 @@ func NewBakHandler(detail *dao.TaskDetail) (*Handler, error) {
 		DingConfig:  detail.Ding,
 		OssConfig:   detail.Oss,
 	}
-	en, err := xorm.NewEngine("mysql", handler.User+":"+handler.PassWord+"@tcp("+handler.Host+")/"+handler.DbName+"?charset=utf8&parseTime=true")
-	if err != nil {
-		return nil, err
-	}
-	handler.Engine = en
 	c := cron.New()
 	if _, ok := CronJob[handler.TaskID]; ok {
 		return nil, errors.New("当前备份任务已启动，切勿重复启动")
@@ -125,24 +118,22 @@ func (h *Handler) StopBak(tid int64) error {
 func (h *Handler) Run() {
 	log.Logger.Info("BakHandler 开始备份数据库")
 	h.BeforBak()
-	err := h.Engine.DumpAllToFile(h.FileName)
-	if err != nil {
-		if err := h.RunMysqlDump(); err != nil {
-			h.BakStatus = 0
-			h.OssStatus = 2
-			h.DingStatus = 2
-			h.BakMsg = fmt.Sprintf("%s", err)
-			h.FileName = "unknown"
-			AfterBak(h)
-			log.Logger.Error("备份失败,保存备份历史到数据库,停止备份任务,发送消息", err)
-			if err := h.StoreDatabase(); err != nil {
-				log.Logger.Error("数据库存储失败", err)
-				return
-			}
-			log.Logger.Debug("备份失败,数据库存储成功")
+	if err := h.RunMysqlBak(); err != nil {
+		h.BakStatus = 0
+		h.OssStatus = 2
+		h.DingStatus = 2
+		h.BakMsg = fmt.Sprintf("%s", err)
+		h.FileName = "unknown"
+		AfterBak(h)
+		log.Logger.Error("备份失败,保存备份历史到数据库,停止备份任务,发送消息", err)
+		if err := h.StoreDatabase(); err != nil {
+			log.Logger.Error("数据库存储失败", err)
 			return
 		}
+		log.Logger.Debug("备份失败,数据库存储成功")
+		return
 	}
+
 	h.BakMsg = "success"
 	h.BakStatus = 1
 	h.FileSize = int64(pkg.GetFileSize(h.FileName))
@@ -169,8 +160,7 @@ func (h *Handler) Run() {
 	log.Logger.Debug("数据库存储成功")
 }
 
-func (h *Handler) RunMysqlDump() error {
-	log.Logger.Warning("使用xorm备份失败，尝试使用mysqldump进行备份")
+func (h *Handler) MysqlDump() error {
 	iphost, port := strings.Split(h.Host, ":")[0], strings.Split(h.Host, ":")[1]
 	command := fmt.Sprintf("mysqldump -u%v -p%v -P%v -h%v  %v >  %v", h.User, h.PassWord, port, iphost, h.DbName, h.FileName)
 	cmd := exec.Command("sh", "-c", command)
@@ -181,6 +171,26 @@ func (h *Handler) RunMysqlDump() error {
 	}
 	log.Logger.Infof("mysqldump执行成功:%v:%v", h.Host, h.DbName)
 	return nil
+}
+
+func (h *Handler) FlushLogs() error {
+	iphost, port := strings.Split(h.Host, ":")[0], strings.Split(h.Host, ":")[1]
+	command := fmt.Sprintf("mysqladmin -u%v -p%v -P%v -h%v flush-logs", h.User, h.PassWord, port, iphost)
+	cmd := exec.Command("sh", "-c", command)
+	_, err := cmd.Output()
+	if err != nil {
+		log.Logger.Error("mysqlFlush执行失败:", command, " with error: ", err.Error())
+		return err
+	}
+	log.Logger.Infof("mysqlFlush执行成功:%v:%v", h.Host, h.DbName)
+	return nil
+}
+
+func (h *Handler) RunMysqlBak() error {
+	if err := h.FlushLogs(); err != nil {
+		return err
+	}
+	return h.MysqlDump()
 }
 
 func (h *Handler) StoreDatabase() error {
